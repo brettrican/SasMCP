@@ -1,0 +1,3 @@
+"""SassyMCP - Unified MCP server for Windows + Android automation and security auditing."""
+
+__version__ = "0.1.0"
