@@ -1,10 +1,8 @@
 """EventLog - Windows Event Log + Android logcat."""
 
 import asyncio
-from mcp.server import Server
 
-
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_eventlog(log_name: str = "System", count: int = 20, level: str = "", source: str = "") -> str:
         """Read Windows Event Log. log_name: System, Application, Security."""

@@ -2,8 +2,6 @@
 
 import asyncio
 import shutil
-from mcp.server import Server
-
 
 async def _run_cmd(cmd, timeout=30):
     proc = await asyncio.create_subprocess_shell(
@@ -15,7 +13,7 @@ async def _run_cmd(cmd, timeout=30):
         proc.kill(); return f"Timed out after {timeout}s"
 
 
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_netstat(filter: str = "") -> str:
         """Show active network connections."""

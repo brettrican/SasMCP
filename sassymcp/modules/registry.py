@@ -1,8 +1,6 @@
 """Registry - Windows Registry read/write for forensics."""
 
 import asyncio
-from mcp.server import Server
-
 
 async def _reg(cmd, timeout=15):
     proc = await asyncio.create_subprocess_shell(
@@ -12,7 +10,7 @@ async def _reg(cmd, timeout=15):
     return out if out else stderr.decode("utf-8", errors="replace").strip()
 
 
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_reg_read(key_path: str, value_name: str = "") -> str:
         """Read a Windows registry key or value."""

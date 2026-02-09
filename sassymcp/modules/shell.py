@@ -8,7 +8,6 @@ Includes automatic syntax normalization:
 
 import asyncio
 import re
-from mcp.server import Server
 
 
 def _normalize_for_powershell(command: str) -> str:
@@ -31,7 +30,7 @@ def _normalize_for_powershell(command: str) -> str:
     return command
 
 
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_shell(command: str, shell: str = "powershell", timeout_seconds: int = 30) -> str:
         """Execute a shell command. shell: powershell, cmd, or wsl.

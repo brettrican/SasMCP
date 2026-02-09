@@ -1,10 +1,8 @@
 """Bluetooth - Device enumeration and diagnostics."""
 
 import asyncio
-from mcp.server import Server
 
-
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_bt_devices() -> str:
         """List paired Bluetooth devices."""

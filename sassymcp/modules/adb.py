@@ -3,8 +3,6 @@
 import asyncio
 import shutil
 import os
-from mcp.server import Server
-
 
 def _adb_path() -> str:
     path = shutil.which("adb")
@@ -29,7 +27,7 @@ async def _run_adb(*args, timeout=30):
     except FileNotFoundError: return "Error: adb not found"
 
 
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_adb_devices() -> str:
         """List connected Android devices."""

@@ -1,10 +1,8 @@
 """Clipboard - Cross-device clipboard (Windows <-> Android)."""
 
 import asyncio
-from mcp.server import Server
 
-
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_clipboard_get() -> str:
         """Get Windows clipboard text."""

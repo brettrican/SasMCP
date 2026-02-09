@@ -2,10 +2,8 @@
 
 import asyncio
 import json
-from mcp.server import Server
 
-
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_processes(filter: str = "", sort_by: str = "cpu") -> str:
         """List running processes. sort_by: cpu, memory, name."""

@@ -3,8 +3,6 @@
 import asyncio
 import shutil
 import os
-from mcp.server import Server
-
 _scrcpy_proc = None
 
 def _find_scrcpy():
@@ -15,7 +13,7 @@ def _find_scrcpy():
     return "scrcpy"
 
 
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_scrcpy_start(device: str = "", max_size: int = 1024, no_audio: bool = True) -> str:
         """Start scrcpy screen mirroring."""

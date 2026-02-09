@@ -4,10 +4,8 @@ import asyncio
 import hashlib
 import json
 from pathlib import Path
-from mcp.server import Server
 
-
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_hash_file(path: str, algorithm: str = "sha256") -> str:
         """Compute file hash. algorithm: md5, sha1, sha256, sha512."""

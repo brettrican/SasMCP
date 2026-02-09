@@ -6,10 +6,8 @@ the field before typing, ensuring clean output every time.
 
 import json
 import asyncio
-from mcp.server import Server
 
-
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_desktop_state(include_taskbar: bool = False) -> str:
         """Get desktop state: open windows and positions. Lean output."""

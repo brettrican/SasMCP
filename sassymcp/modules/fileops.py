@@ -5,10 +5,7 @@ import shutil
 import re
 import json
 from pathlib import Path
-from mcp.server import Server
-
-
-def register(server: Server):
+def register(server):
     @server.tool()
     async def sassy_read_file(path: str, offset: int = 0, length: int = 1000) -> str:
         """Read file contents. offset/length for line-based pagination."""
