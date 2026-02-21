@@ -25,27 +25,45 @@ def register(server):
     async def sassy_kill_process(pid: int, force: bool = False) -> str:
         """Kill a process by PID."""
         import psutil
-        p = psutil.Process(pid)
-        name = p.name()
-        p.kill() if force else p.terminate()
-        return f"Terminated {name} (PID: {pid})"
+        try:
+            p = psutil.Process(pid)
+            name = p.name()
+            p.kill() if force else p.terminate()
+            return f"Terminated {name} (PID: {pid})"
+        except psutil.NoSuchProcess:
+            return f"Error: No process with PID {pid}"
+        except psutil.AccessDenied:
+            return f"Error: Access denied to kill PID {pid}"
+        except Exception as e:
+            return f"Error: {e}"
 
     @server.tool()
     async def sassy_android_processes(device: str = "") -> str:
         """List running processes on Android device."""
         args = ["adb"] + (["-s", device] if device else []) + ["shell", "ps -A -o PID,NAME,%CPU,RSS"]
-        proc = await asyncio.create_subprocess_exec(
-            *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
-        return stdout.decode("utf-8", errors="replace").strip()
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
+            return stdout.decode("utf-8", errors="replace").strip()
+        except asyncio.TimeoutError:
+            return "Timed out after 15s"
+        except FileNotFoundError:
+            return "Error: adb not found"
+        except Exception as e:
+            return f"Error: {e}"
 
     @server.tool()
     async def sassy_system_info() -> str:
         """Get system resource summary."""
-        import psutil, platform, time
+        import psutil
+        import platform
+        import sys
+        import time
         cpu = psutil.cpu_percent(interval=1)
         mem = psutil.virtual_memory()
-        disk = psutil.disk_usage("C:\\")
+        disk_path = "C:\\" if sys.platform == "win32" else "/"
+        disk = psutil.disk_usage(disk_path)
         uptime = time.time() - psutil.boot_time()
         return json.dumps({
             "hostname": platform.node(), "os": f"{platform.system()} {platform.release()}",

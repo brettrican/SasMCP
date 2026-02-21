@@ -1,6 +1,5 @@
 """FileOps - Fast file I/O operations."""
 
-import os
 import shutil
 import re
 import json
@@ -92,5 +91,6 @@ def register(server):
         info = {"path": str(p.resolve()), "type": "directory" if p.is_dir() else "file",
                 "size_bytes": stat.st_size, "modified": stat.st_mtime, "created": stat.st_ctime}
         if p.is_file():
-            info["lines"] = sum(1 for _ in open(p, encoding="utf-8", errors="replace"))
+            with open(p, encoding="utf-8", errors="replace") as f:
+                info["lines"] = sum(1 for _ in f)
         return json.dumps(info, indent=2)
