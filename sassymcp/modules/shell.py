@@ -21,8 +21,13 @@ def _normalize_for_powershell(command: str) -> str:
     """
     # Replace && with ; for PowerShell
     command = command.replace(" && ", "; ")
-    # Replace || with PowerShell error handling
-    command = command.replace(" || ", "; if ($LASTEXITCODE -ne 0) { ")
+    # Replace || with PowerShell error handling (properly closed braces)
+    parts = command.split(" || ")
+    if len(parts) > 1:
+        result = parts[0]
+        for part in parts[1:]:
+            result = f"{result}; if ($LASTEXITCODE -ne 0) {{ {part} }}"
+        command = result
     # Convert 'cd /d path' (cmd syntax) to Set-Location
     command = re.sub(r'^cd\s+/d\s+(.+?)(?:;|$)', r'Set-Location \1;', command)
     # Convert plain 'cd path' at start to Set-Location

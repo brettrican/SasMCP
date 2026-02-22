@@ -19,7 +19,7 @@ def register(server):
         """Show active network connections."""
         out = await _run_cmd("netstat -ano")
         if filter:
-            lines = [l for l in out.splitlines() if filter.lower() in l.lower()]
+            lines = [line for line in out.splitlines() if filter.lower() in line.lower()]
             return "\n".join(lines[:100])
         return "\n".join(out.splitlines()[:100])
 

@@ -3,7 +3,6 @@
 import asyncio
 import hashlib
 import json
-from pathlib import Path
 
 def register(server):
     @server.tool()
@@ -29,11 +28,19 @@ def register(server):
     @server.tool()
     async def sassy_cert_check(target: str, port: int = 443) -> str:
         """Check TLS certificate for a host."""
-        import ssl, socket
+        import ssl
         ctx = ssl.create_default_context()
-        with ctx.wrap_socket(socket.socket(), server_hostname=target) as s:
-            s.settimeout(10); s.connect((target, port))
-            cert = s.getpeercert()
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(target, port, ssl=ctx), timeout=10
+            )
+            cert = writer.transport.get_extra_info("peercert")
+            writer.close()
+            await writer.wait_closed()
+        except Exception as e:
+            return f"Error: {e}"
+        if not cert:
+            return "Error: could not retrieve certificate"
         return json.dumps({
             "subject": dict(x[0] for x in cert.get("subject", ())),
             "issuer": dict(x[0] for x in cert.get("issuer", ())),
@@ -44,7 +51,8 @@ def register(server):
     @server.tool()
     async def sassy_apk_info(apk_path: str) -> str:
         """Analyze APK: permissions, signatures, package info."""
-        import shutil, zipfile
+        import shutil
+        import zipfile
         aapt = shutil.which("aapt") or shutil.which("aapt2")
         if aapt:
             proc = await asyncio.create_subprocess_exec(

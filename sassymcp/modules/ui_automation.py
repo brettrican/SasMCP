@@ -5,7 +5,6 @@ the field before typing, ensuring clean output every time.
 """
 
 import json
-import asyncio
 
 def register(server):
     @server.tool()
