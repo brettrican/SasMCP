@@ -2,7 +2,7 @@
 
 Unified MCP server combining Windows desktop automation, Android device
 control (ADB/scrcpy), security auditing, forensics tools, desktop vision,
-cross-session communication, web inspection, and workflow persona.
+cross-session communication, web inspection, GitHub operations, and workflow persona.
 
 Built for Claude Desktop by Sassy Consulting LLC.
 """
@@ -20,6 +20,8 @@ from sassymcp.modules import (
     crosslink,
     eventlog,
     fileops,
+    github_ops,
+    github_quick,
     network_audit,
     persona,
     phone_screen,
@@ -46,6 +48,8 @@ MODULES = [
     registry, bluetooth, eventlog, clipboard,
     # v0.2.0 — New modules
     vision, app_launcher, web_inspector, crosslink, persona,
+    # v0.3.0 — GitHub (full + quick)
+    github_ops, github_quick,
 ]
 
 for module in MODULES:
