@@ -97,6 +97,18 @@ DEV_PRACTICES = """
 - HTTPS everywhere, TLS 1.3 preferred
 - Research current OWASP Top 10 before implementing auth flows
 
+### GitHub MCP Tool Rules (CRITICAL):
+- NEVER use `create_or_update_file` for updating existing files. It has
+  broken SHA validation (ETag vs blob SHA mismatch, PathEscape encoding
+  bug). See: github/github-mcp-server#2133
+- ALWAYS use `push_files` for ALL file operations (create AND update).
+  It uses the Git Data API (tree -> commit -> ref) which bypasses the
+  broken Contents API entirely. Works for single or multi-file ops.
+- `create_or_update_file` is ONLY acceptable for creating brand new files
+  in repos where you're certain the file doesn't exist yet.
+- `push_files` supports atomic multi-file commits - prefer batching
+  related changes into a single commit.
+
 ### Website Creation (any platform):
 
 **Cloudflare Workers/Pages (preferred stack):**
