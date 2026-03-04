@@ -1,7 +1,8 @@
 """SassyMCP Server - Main entry point.
 
 Unified MCP server combining Windows desktop automation, Android device
-control (ADB/scrcpy), security auditing, and forensics tools.
+control (ADB/scrcpy), security auditing, forensics tools, desktop vision,
+cross-session communication, web inspection, and workflow persona.
 
 Built for Claude Desktop by Sassy Consulting LLC.
 """
@@ -13,17 +14,22 @@ from mcp.server.fastmcp import FastMCP
 
 from sassymcp.modules import (
     adb,
+    app_launcher,
     bluetooth,
     clipboard,
+    crosslink,
     eventlog,
     fileops,
     network_audit,
+    persona,
     phone_screen,
     process_manager,
     registry,
     security_audit,
     shell,
     ui_automation,
+    vision,
+    web_inspector,
 )
 
 logger = logging.getLogger("sassymcp")
@@ -31,9 +37,15 @@ logger = logging.getLogger("sassymcp")
 mcp = FastMCP("sassymcp")
 
 MODULES = [
-    fileops, shell, ui_automation, adb, phone_screen,
+    # Core
+    fileops, shell, ui_automation,
+    # Android
+    adb, phone_screen,
+    # System
     network_audit, process_manager, security_audit,
     registry, bluetooth, eventlog, clipboard,
+    # v0.2.0 — New modules
+    vision, app_launcher, web_inspector, crosslink, persona,
 ]
 
 for module in MODULES:
