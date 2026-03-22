@@ -127,9 +127,14 @@ def get_tracker() -> ToolUsageTracker:
 
 # Define which modules belong to which load tier
 TOOL_GROUPS = {
+    "meta": {
+        "modules": ["meta"],
+        "description": "Context estimation, tool usage stats, group management (always loaded)",
+        "always_load": True,
+    },
     "core": {
-        "modules": ["fileops", "shell", "ui_automation"],
-        "description": "File operations, shell commands, desktop automation",
+        "modules": ["fileops", "shell", "ui_automation", "editor", "audit", "session"],
+        "description": "File operations, shell commands, desktop automation, surgical editing, audit logging, persistent terminal sessions",
         "always_load": True,
     },
     "android": {
@@ -161,6 +166,11 @@ TOOL_GROUPS = {
     "persona": {
         "modules": ["persona"],
         "description": "SaS workflow persona and dev practices",
+        "always_load": True,
+    },
+    "utility": {
+        "modules": ["utility"],
+        "description": "Env vars, toast notifications, zip/tar archives, file diff, HTTP requests",
         "always_load": True,
     },
 }

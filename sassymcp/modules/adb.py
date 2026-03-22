@@ -23,7 +23,12 @@ async def _run_adb(*args, timeout=30):
         err = stderr.decode("utf-8", errors="replace").strip()
         if proc.returncode != 0 and err: return f"Error (exit {proc.returncode}): {err}"
         return out if out else err
-    except asyncio.TimeoutError: return f"Timed out after {timeout}s"
+    except asyncio.TimeoutError:
+        try:
+            proc.kill()
+        except Exception:
+            pass
+        return f"Timed out after {timeout}s"
     except FileNotFoundError: return "Error: adb not found"
 
 
@@ -40,9 +45,16 @@ def register(server):
         return await _run_adb(*(args + ["shell", command]))
 
     @server.tool()
-    async def sassy_adb_packages(filter: str = "") -> str:
+    async def sassy_adb_packages(filter_str: str = "") -> str:
         """List installed packages."""
-        cmd = "pm list packages" + (f" | grep -i {filter}" if filter else "")
+        if filter_str:
+            # Sanitize: only allow alphanumeric, dots, underscores for package filter
+            import re
+            if not re.match(r'^[A-Za-z0-9\._\-]+$', filter_str):
+                return f"Error: invalid filter: {filter_str!r}"
+            cmd = f"pm list packages | grep -i {filter_str}"
+        else:
+            cmd = "pm list packages"
         return await _run_adb("shell", cmd)
 
     @server.tool()
@@ -64,10 +76,10 @@ def register(server):
         return await _run_adb(*args, timeout=120)
 
     @server.tool()
-    async def sassy_adb_logcat(filter: str = "", lines: int = 100, device: str = "") -> str:
+    async def sassy_adb_logcat(filter_str: str = "", lines: int = 100, device: str = "") -> str:
         """Get Android logcat output."""
         args = (["-s", device] if device else []) + ["logcat", "-d", "-t", str(lines)]
-        if filter: args.append(filter)
+        if filter_str: args.append(filter_str)
         return await _run_adb(*args)
 
     @server.tool()

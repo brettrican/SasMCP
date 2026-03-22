@@ -114,8 +114,10 @@ def register(server):
             img.convert("RGB").save(buf, format="JPEG", quality=75, optimize=True)
             b64 = base64.b64encode(buf.getvalue()).decode("ascii")
             return json.dumps({"image_base64": b64, "format": "jpeg", "size": list(img.size), "bytes": len(buf.getvalue()), "saved_to": save, "method": "playwright"})
-        except ImportError: pass
-        except Exception: pass
+        except ImportError:
+            _pw_err = "playwright not installed"
+        except Exception as e:
+            _pw_err = str(e)
 
         try:
             chrome_paths = [r"C:\Program Files\Google\Chrome\Application\chrome.exe", r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe", "chrome", "chromium"]
@@ -127,7 +129,7 @@ def register(server):
                     break
                 except Exception: continue
             if not chrome:
-                return json.dumps({"error": "No Chrome/Chromium found. Install Playwright or Chrome."})
+                return json.dumps({"error": f"No screenshot backend. Playwright: {_pw_err}. Chrome/Chromium: not found."})
             cmd = [chrome, "--headless", "--disable-gpu", "--no-sandbox", f"--window-size={width},{height}", f"--screenshot={save}", url]
             subprocess.run(cmd, capture_output=True, timeout=30)
             if Path(save).exists():

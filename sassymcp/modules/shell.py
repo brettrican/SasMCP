@@ -64,6 +64,10 @@ def register(server):
             if errors: parts.append(f"STDERR: {errors}")
             return "\n".join(parts)
         except asyncio.TimeoutError:
+            try:
+                proc.kill()
+            except Exception:
+                pass
             return f"Timed out after {timeout_seconds}s"
         except Exception as e:
             return f"Error: {e}"

@@ -5,14 +5,14 @@ import json
 
 def register(server):
     @server.tool()
-    async def sassy_processes(filter: str = "", sort_by: str = "cpu") -> str:
+    async def sassy_processes(filter_str: str = "", sort_by: str = "cpu") -> str:
         """List running processes. sort_by: cpu, memory, name."""
         import psutil
         procs = []
         for p in psutil.process_iter(["pid", "name", "cpu_percent", "memory_info"]):
             try:
                 info = p.info
-                if filter and filter.lower() not in info["name"].lower(): continue
+                if filter_str and filter_str.lower() not in info["name"].lower(): continue
                 procs.append({"pid": info["pid"], "name": info["name"],
                     "cpu": info["cpu_percent"] or 0,
                     "mem_mb": round((info["memory_info"].rss if info["memory_info"] else 0) / 1048576, 1)})
@@ -47,6 +47,10 @@ def register(server):
             stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
             return stdout.decode("utf-8", errors="replace").strip()
         except asyncio.TimeoutError:
+            try:
+                proc.kill()
+            except Exception:
+                pass
             return "Timed out after 15s"
         except FileNotFoundError:
             return "Error: adb not found"

@@ -6,8 +6,9 @@ def register(server):
     @server.tool()
     async def sassy_bt_devices() -> str:
         """List paired Bluetooth devices."""
-        proc = await asyncio.create_subprocess_shell(
-            'powershell -NoProfile -Command "Get-PnpDevice -Class Bluetooth | Where { $_.Status -eq \'OK\' } | Select FriendlyName,DeviceID,Status | FT -Auto"',
+        ps_script = "Get-PnpDevice -Class Bluetooth | Where { $_.Status -eq 'OK' } | Select FriendlyName,DeviceID,Status | FT -Auto"
+        proc = await asyncio.create_subprocess_exec(
+            "powershell.exe", "-NoProfile", "-Command", ps_script,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
         return stdout.decode("utf-8", errors="replace").strip()
@@ -15,8 +16,9 @@ def register(server):
     @server.tool()
     async def sassy_bt_scan() -> str:
         """List all Bluetooth devices."""
-        proc = await asyncio.create_subprocess_shell(
-            'powershell -NoProfile -Command "Get-PnpDevice -Class Bluetooth | Select FriendlyName,DeviceID,Status,InstanceId | FT -Auto"',
+        ps_script = "Get-PnpDevice -Class Bluetooth | Select FriendlyName,DeviceID,Status,InstanceId | FT -Auto"
+        proc = await asyncio.create_subprocess_exec(
+            "powershell.exe", "-NoProfile", "-Command", ps_script,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
         return stdout.decode("utf-8", errors="replace").strip()

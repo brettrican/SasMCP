@@ -12,7 +12,7 @@
 | **~35K+ tokens overhead** | **~10K tokens overhead** |
 
 - **~25K fewer tokens** consumed by tool definitions
-- **58 tools** across 12 modules (more than the 3 servers combined)
+- **183 tools** across 22 modules (more than the 3 servers combined)
 - **Syntax normalization** — no more PowerShell `&&` crashes
 - **Android integration** — ADB, scrcpy, logcat built in
 - **Security tools** — hash, certs, firewall, Defender, APK analysis
@@ -103,7 +103,7 @@ If you're used to the old tool names, here's what replaced what:
 | `list_directory` | `sassy_list_dir` |
 | `start_search` | `sassy_search_files` |
 | `start_process` | `sassy_shell` |
-| `edit_block` | `sassy_read_file` + `sassy_write_file` |
+| `edit_block` | `sassy_edit_block` (fuzzy match + diff reporting) |
 | `get_file_info` | `sassy_file_info` |
 
 ### From Filesystem MCP
@@ -114,10 +114,12 @@ If you're used to the old tool names, here's what replaced what:
 | `list_directory` | `sassy_list_dir` |
 | `search_files` | `sassy_search_files` |
 | `move_file` | `sassy_move` |
-| `create_directory` | `sassy_write_file` (auto-creates parents) |
+| `create_directory` | `sassy_mkdir` |
 | `get_file_info` | `sassy_file_info` |
 
 ### New Tools (not in any predecessor)
+- `sassy_edit_block`, `sassy_edit_multi` — surgical diff-based editing with fuzzy match
+- `sassy_mkdir` — directory creation with parent auto-create
 - `sassy_adb_*` — 10 Android device tools
 - `sassy_scrcpy_*` — 3 screen mirroring tools
 - `sassy_netstat`, `sassy_port_scan`, `sassy_arp_table` — network audit
@@ -126,6 +128,14 @@ If you're used to the old tool names, here's what replaced what:
 - `sassy_bt_*` — Bluetooth enumeration
 - `sassy_eventlog*` — Windows Event Log
 - `sassy_clipboard_*` — cross-device clipboard
+- `sassy_crosslink_*` — cross-session communication (SQLite + HTTP API)
+- `sassy_persona_*` — workflow persona and dev practices
+- `sassy_gh_*` — 80-tool full GitHub API replacement
+- `sassy_ghq_*` — 6-tool lean GitHub daily-driver
+- `sassy_url_*` — web inspection (headers, tech stack, performance, links)
+- `sassy_screen_*`, `sassy_find_text_on_screen` — desktop vision + OCR
+- `sassy_launch_*`, `sassy_focus_window`, `sassy_snap_window` — app/window management
+- `sassy_context_estimate`, `sassy_tool_usage`, `sassy_tool_groups` — meta/introspection
 
 ## Publishing to npm/PyPI (Optional)
 
@@ -160,7 +170,7 @@ To add a new module:
 1. Create `sassymcp/modules/your_module.py`
 2. Implement `def register(server: Server):`
 3. Add `@server.tool()` decorated async functions
-4. Import and add to `MODULES` list in `sassymcp/server.py`
+4. Add your module to the appropriate group in `TOOL_GROUPS` in `sassymcp/modules/_tool_loader.py`
 
 ## License
 

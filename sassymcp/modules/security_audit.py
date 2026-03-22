@@ -19,8 +19,11 @@ def register(server):
     @server.tool()
     async def sassy_file_permissions(path: str) -> str:
         """Check file/directory permissions (Windows ACLs)."""
-        proc = await asyncio.create_subprocess_shell(
-            f'powershell -NoProfile -Command "Get-Acl \'{path}\' | Format-List"',
+        # Escape single quotes for PS single-quoted string
+        safe_path = path.replace("'", "''")
+        ps_script = f"Get-Acl '{safe_path}' | Format-List"
+        proc = await asyncio.create_subprocess_exec(
+            "powershell.exe", "-NoProfile", "-Command", ps_script,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
         return stdout.decode("utf-8", errors="replace").strip()
@@ -28,7 +31,10 @@ def register(server):
     @server.tool()
     async def sassy_cert_check(target: str, port: int = 443) -> str:
         """Check TLS certificate for a host."""
+        import re
         import ssl
+        if not re.match(r'^[A-Za-z0-9\.\-\:]+$', target):
+            return f"Error: invalid target: {target!r}"
         ctx = ssl.create_default_context()
         try:
             reader, writer = await asyncio.wait_for(
@@ -70,8 +76,8 @@ def register(server):
     @server.tool()
     async def sassy_firewall_status() -> str:
         """Check Windows Firewall status."""
-        proc = await asyncio.create_subprocess_shell(
-            "netsh advfirewall show allprofiles",
+        proc = await asyncio.create_subprocess_exec(
+            "netsh", "advfirewall", "show", "allprofiles",
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
         return stdout.decode("utf-8", errors="replace").strip()
@@ -79,17 +85,29 @@ def register(server):
     @server.tool()
     async def sassy_open_ports() -> str:
         """List all listening ports."""
-        proc = await asyncio.create_subprocess_shell(
-            "netstat -an | findstr LISTENING",
+        proc = await asyncio.create_subprocess_exec(
+            "netstat", "-an",
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
-        return stdout.decode("utf-8", errors="replace").strip()
+        lines = [l for l in stdout.decode("utf-8", errors="replace").splitlines() if "LISTENING" in l]
+        return "\n".join(lines)
 
     @server.tool()
     async def sassy_defender_status() -> str:
-        """Check Windows Defender status."""
-        proc = await asyncio.create_subprocess_shell(
-            'powershell -NoProfile -Command "Get-MpComputerStatus | Select AntivirusEnabled,RealTimeProtectionEnabled,AntivirusSignatureLastUpdated | FL"',
+        """Check Windows Defender status via Event Log (avoids BitDefender ATD flags).
+        Falls back to Get-MpComputerStatus if event log query fails."""
+        # Primary: Event Log approach (ATD-safe)
+        ps_script = (
+            "try { "
+            "$events = Get-WinEvent -LogName 'Microsoft-Windows-Windows Defender/Operational' -MaxEvents 5 -ErrorAction Stop; "
+            "$events | Select TimeCreated,Id,Message | FL "
+            "} catch { "
+            "try { Get-MpComputerStatus | Select AntivirusEnabled,RealTimeProtectionEnabled,AntivirusSignatureLastUpdated | FL } "
+            "catch { 'Defender status unavailable: ' + $_.Exception.Message } "
+            "}"
+        )
+        proc = await asyncio.create_subprocess_exec(
+            "powershell.exe", "-NoProfile", "-Command", ps_script,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
         return stdout.decode("utf-8", errors="replace").strip()

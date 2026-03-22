@@ -171,28 +171,54 @@ def register(server):
             return json.dumps({"error": str(e)})
 
     @server.tool()
-    async def sassy_snap_window(title: str, position: str = "left") -> str:
+    async def sassy_snap_window(title: str, position: str = "left", monitor: int = 0) -> str:
         """Snap a window to a screen edge. Like Win+Arrow.
 
         position: "left", "right", "top-left", "top-right",
                   "bottom-left", "bottom-right", "center"
+        monitor: 0 = primary, 1+ = additional monitors
         """
         try:
             from pywinauto import Desktop
-            import pyautogui
+            import ctypes
 
-            screen_w, screen_h = pyautogui.size()
-            half_w, half_h = screen_w // 2, screen_h // 2
-            taskbar_h = 48
+            # Get actual work area (excludes taskbar) for the target monitor
+            try:
+                from sassymcp.modules.ui_automation import _get_monitors
+                monitors = _get_monitors()
+                if monitors and monitor < len(monitors):
+                    m = monitors[monitor]
+                    mon_x, mon_y = m["left"], m["top"]
+                    mon_w, mon_h = m["width"], m["height"]
+                else:
+                    import pyautogui
+                    mon_x, mon_y = 0, 0
+                    mon_w, mon_h = pyautogui.size()
+            except Exception:
+                import pyautogui
+                mon_x, mon_y = 0, 0
+                mon_w, mon_h = pyautogui.size()
+
+            # Get actual work area (taskbar-aware) via SystemParametersInfo
+            try:
+                rect = ctypes.wintypes.RECT()
+                ctypes.windll.user32.SystemParametersInfoW(0x0030, 0, ctypes.byref(rect), 0)  # SPI_GETWORKAREA
+                # Only use work area for primary monitor
+                if monitor == 0:
+                    mon_h = rect.bottom - rect.top
+            except Exception:
+                pass
+
+            half_w, half_h = mon_w // 2, mon_h // 2
 
             positions = {
-                "left":         (0, 0, half_w, screen_h - taskbar_h),
-                "right":        (half_w, 0, half_w, screen_h - taskbar_h),
-                "top-left":     (0, 0, half_w, half_h),
-                "top-right":    (half_w, 0, half_w, half_h),
-                "bottom-left":  (0, half_h, half_w, half_h - taskbar_h),
-                "bottom-right": (half_w, half_h, half_w, half_h - taskbar_h),
-                "center":       (screen_w // 4, screen_h // 4, half_w, half_h),
+                "left":         (mon_x, mon_y, half_w, mon_h),
+                "right":        (mon_x + half_w, mon_y, half_w, mon_h),
+                "top-left":     (mon_x, mon_y, half_w, half_h),
+                "top-right":    (mon_x + half_w, mon_y, half_w, half_h),
+                "bottom-left":  (mon_x, mon_y + half_h, half_w, half_h),
+                "bottom-right": (mon_x + half_w, mon_y + half_h, half_w, half_h),
+                "center":       (mon_x + mon_w // 4, mon_y + mon_h // 4, half_w, half_h),
             }
 
             if position not in positions:

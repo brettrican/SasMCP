@@ -1,42 +1,93 @@
 """Clipboard - Cross-device clipboard (Windows <-> Android)."""
 
 import asyncio
+import base64
+
+
+async def _safe_wait(proc, timeout=10):
+    """Wait for process with timeout; kill on timeout."""
+    try:
+        return await asyncio.wait_for(proc.communicate(), timeout=timeout)
+    except asyncio.TimeoutError:
+        try:
+            proc.kill()
+        except Exception:
+            pass
+        raise
+
+
+async def _safe_wait_stdin(proc, data, timeout=10):
+    """Wait for process with stdin input and timeout; kill on timeout."""
+    try:
+        return await asyncio.wait_for(
+            proc.communicate(input=data), timeout=timeout)
+    except asyncio.TimeoutError:
+        try:
+            proc.kill()
+        except Exception:
+            pass
+        raise
+
 
 def register(server):
     @server.tool()
     async def sassy_clipboard_get() -> str:
         """Get Windows clipboard text."""
-        proc = await asyncio.create_subprocess_shell(
-            'powershell -NoProfile -Command "Get-Clipboard"',
+        proc = await asyncio.create_subprocess_exec(
+            "powershell.exe", "-NoProfile", "-Command", "Get-Clipboard",
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
-        return stdout.decode("utf-8", errors="replace").strip()
+        try:
+            stdout, _ = await _safe_wait(proc)
+            return stdout.decode("utf-8", errors="replace").strip()
+        except asyncio.TimeoutError:
+            return "Timed out after 10s"
 
     @server.tool()
     async def sassy_clipboard_set(text: str) -> str:
         """Set Windows clipboard text."""
-        escaped = text.replace("'", "''")
-        proc = await asyncio.create_subprocess_shell(
-            f"powershell -NoProfile -Command \"Set-Clipboard -Value '{escaped}'\"",
+        ps_script = "$input | Set-Clipboard"
+        proc = await asyncio.create_subprocess_exec(
+            "powershell.exe", "-NoProfile", "-Command", ps_script,
+            stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        await asyncio.wait_for(proc.communicate(), timeout=10)
-        return f"Clipboard set ({len(text)} chars)"
+        try:
+            await _safe_wait_stdin(proc, text.encode("utf-8"))
+            return f"Clipboard set ({len(text)} chars)"
+        except asyncio.TimeoutError:
+            return "Timed out after 10s"
 
     @server.tool()
     async def sassy_clipboard_to_android(device: str = "") -> str:
         """Send Windows clipboard to Android."""
-        proc = await asyncio.create_subprocess_shell(
-            'powershell -NoProfile -Command "Get-Clipboard"',
+        proc = await asyncio.create_subprocess_exec(
+            "powershell.exe", "-NoProfile", "-Command", "Get-Clipboard",
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
+        try:
+            stdout, _ = await _safe_wait(proc)
+        except asyncio.TimeoutError:
+            return "Timed out reading clipboard"
         text = stdout.decode("utf-8", errors="replace").strip()
-        if not text: return "Windows clipboard is empty"
+        if not text:
+            return "Windows clipboard is empty"
+        b64 = base64.b64encode(text.encode("utf-8")).decode("ascii")
         args = ["adb"] + (["-s", device] if device else [])
-        escaped = text.replace('"', '\\"')
-        args.extend(["shell", f'am broadcast -a clipper.set -e text "{escaped}"'])
+        args.extend(["shell", f"echo {b64} | base64 -d | am broadcast -a clipper.set -e text -"])
         proc2 = await asyncio.create_subprocess_exec(
             *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        await asyncio.wait_for(proc2.communicate(), timeout=10)
+        try:
+            await _safe_wait(proc2)
+        except asyncio.TimeoutError:
+            return "Timed out sending to Android"
+        if proc2.returncode != 0:
+            safe = text.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$").replace("`", "\\`").replace("!", "\\!")
+            args2 = ["adb"] + (["-s", device] if device else [])
+            args2.extend(["shell", f'am broadcast -a clipper.set -e text "{safe}"'])
+            proc3 = await asyncio.create_subprocess_exec(
+                *args2, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            try:
+                await _safe_wait(proc3)
+            except asyncio.TimeoutError:
+                return "Timed out on fallback send to Android"
         return f"Sent to Android: {text[:50]}..."
 
     @server.tool()
@@ -45,5 +96,8 @@ def register(server):
         args = ["adb"] + (["-s", device] if device else []) + ["shell", "am broadcast -a clipper.get"]
         proc = await asyncio.create_subprocess_exec(
             *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
-        return stdout.decode("utf-8", errors="replace").strip()[:200]
+        try:
+            stdout, _ = await _safe_wait(proc)
+            return stdout.decode("utf-8", errors="replace").strip()[:200]
+        except asyncio.TimeoutError:
+            return "Timed out after 10s"

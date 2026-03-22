@@ -81,8 +81,9 @@ class GitHubClient:
                     logger.warning(f"GitHub rate limit low: {remaining} remaining")
 
                 if resp.status_code == 403 and "rate limit" in resp.text.lower():
+                    import time as _time
                     reset = resp.headers.get("X-RateLimit-Reset")
-                    wait = max(int(reset or 0) - int(asyncio.get_event_loop().time()), 5)
+                    wait = max(int(reset or 0) - int(_time.time()), 5)
                     logger.warning(f"Rate limited, waiting {wait}s")
                     await asyncio.sleep(min(wait, 60))
                     continue

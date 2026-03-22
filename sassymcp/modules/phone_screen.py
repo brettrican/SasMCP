@@ -53,4 +53,8 @@ def register(server):
             await asyncio.wait_for(proc.communicate(), timeout=time_limit + 10)
             return f"Recording saved to {output_path}"
         except asyncio.TimeoutError:
+            try:
+                proc.kill()
+            except Exception:
+                pass
             return f"Recording may be at {output_path}"

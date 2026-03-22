@@ -7,12 +7,16 @@ from pathlib import Path
 def register(server):
     @server.tool()
     async def sassy_read_file(path: str, offset: int = 0, length: int = 1000) -> str:
-        """Read file contents. offset/length for line-based pagination."""
+        """Read file contents. offset/length for line-based pagination.
+        Negative offset reads from end (e.g. offset=-20 = last 20 lines)."""
         p = Path(path)
         if not p.exists():
             return f"Error: {path} does not exist"
         lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
-        selected = lines[offset:] if offset < 0 else lines[offset:offset + length]
+        if offset < 0:
+            selected = lines[offset:]
+        else:
+            selected = lines[offset:offset + length]
         return "\n".join(selected)
 
     @server.tool()
@@ -94,3 +98,10 @@ def register(server):
             with open(p, encoding="utf-8", errors="replace") as f:
                 info["lines"] = sum(1 for _ in f)
         return json.dumps(info, indent=2)
+
+    @server.tool()
+    async def sassy_mkdir(path: str) -> str:
+        """Create a directory (and any missing parents)."""
+        p = Path(path)
+        p.mkdir(parents=True, exist_ok=True)
+        return f"Created {p.resolve()}"
