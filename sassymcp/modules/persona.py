@@ -198,6 +198,97 @@ OBSERVABILITY = """
 4. sassy_selfmod_status — check for pending changes
 """
 
+CAPABILITIES = """
+## SassyMCP Capabilities Guide
+
+### Desktop Dynamic Vision
+Standard screenshots are blind — you catch one frame and hope it's the right one.
+Use these tools for real-time awareness:
+
+- **sassy_screen_glance** — Fast grayscale capture (~3KB). Call repeatedly to "watch"
+  the screen during multi-step operations. Minimal context cost.
+- **sassy_screen_watch** — Monitor for N seconds, returns only frames where content
+  changed (pixel diff threshold). Use after triggering an action to verify it worked.
+- **sassy_screen_diff** — Before/after comparison. Takes frame now, waits, takes another.
+  Returns both frames + a diff image highlighting changes. Use to verify visual effects.
+
+When to use which:
+- Quick status check → sassy_screen_glance
+- Waiting for something to appear/change → sassy_screen_watch
+- Verifying an action had effect → sassy_screen_diff
+- Full-color high-res capture → sassy_screen_capture (original, heavier)
+
+### Android Phone Vision
+The phone has TWO observation modes — structured and visual:
+
+**Structured (preferred for interaction):**
+- **sassy_phone_ui** — Reads the UI accessibility tree. Every visible element with
+  text, description, coordinates, clickable/focused/checked state. This is how you
+  "see" the phone — structured data, not pixels. Fast, never misses text.
+- **sassy_phone_state** — Quick status: foreground app, screen on/off, battery, WiFi,
+  notification count.
+- **sassy_phone_watch** — Monitors UI tree changes over time. Returns snapshots only
+  when screen content changes. Use to wait for an action to complete.
+
+**Visual (for layout/visual context):**
+- **sassy_phone_glance** — Low-res grayscale phone screenshot (~4-8KB via direct pipe).
+
+### Phone Interaction
+Full touch control via ADB:
+- **sassy_phone_tap(x, y)** — Tap coordinates. Get coordinates from sassy_phone_ui.
+- **sassy_phone_swipe(x1, y1, x2, y2)** — Swipe gesture. Use for scrolling.
+- **sassy_phone_type(text)** — Type into focused field. Tap a text field first.
+- **sassy_phone_key(keycode)** — Send keys: HOME, BACK, ENTER, VOLUME_UP, POWER, etc.
+- **sassy_phone_open(package)** — Launch app by package name.
+
+### CRITICAL: Sensitive Context Detection
+All interaction tools (tap, swipe, type) automatically scan the UI tree BEFORE executing.
+If they detect login screens, payment forms, account selectors, 2FA prompts, or
+permission dialogs:
+
+1. The tool REFUSES to execute
+2. It returns what it sees on screen (element details, trigger keywords)
+3. You MUST describe the screen to the user and ask what to do
+4. Only call again with confirmed=True after the user explicitly says to proceed
+
+NEVER bypass this. NEVER set confirmed=True without actual user confirmation.
+
+### Pause / Resume (Autonomous Handoff)
+For complex flows where the user needs to take over temporarily:
+
+**When to pause:**
+- User says "wait", "hold on", "let me do this", "I'll handle this"
+- Sensitive context detected and user wants to handle it manually
+- Any time the user indicates they want to interact with the phone directly
+
+**How it works:**
+1. Call sassy_phone_pause(reason="user handling login")
+2. ALL interaction tools (tap/swipe/type) are now blocked
+3. Observation tools STILL WORK — keep using sassy_phone_ui and sassy_phone_glance
+   to watch what the user is doing. You learn from this.
+4. When user says "done", "continue", "resume", "go ahead" — call sassy_phone_resume
+5. Continue your task, now informed by everything you observed during the pause
+
+**Example flow:**
+- AI: tapping through app setup
+- AI: hits Google sign-in → sensitive context blocks
+- AI: "I see a Google account selection screen. Want me to proceed or handle this yourself?"
+- User: "let me log in, hold on"
+- AI: calls sassy_phone_pause → keeps watching via sassy_phone_ui
+- AI: observes user selected work account, completed 2FA
+- User: "ok done"
+- AI: calls sassy_phone_resume → continues setup, knows which account was used
+
+### Setup Wizard
+On first connection or when setup is incomplete:
+1. sassy_setup_wizard — Create user persona (role, stack, preferences)
+2. sassy_setup_github — Guide GitHub token creation (opens browser, validates, saves)
+3. sassy_setup_ssh — Configure remote Linux access (host/user/pass, test connection)
+4. sassy_setup_check_tools — Scan for optional tools (nmap, Tesseract, ADB, scrcpy, plink)
+
+Each step can be skipped. The wizard uses SassyMCP's own tools to guide the user.
+"""
+
 
 def _load_user_context() -> str:
     """Load user context from ~/.sassymcp/persona.md or return default template."""
@@ -256,13 +347,21 @@ def register(server):
         return USER_CONTEXT.strip()
 
     @server.tool()
+    async def sassy_persona_capabilities() -> str:
+        """Get the SassyMCP capabilities guide. How to use dynamic vision,
+        phone interaction, pause/resume, sensitive context detection, and setup wizard.
+        This is the instruction manual for SassyMCP's advanced features."""
+        return CAPABILITIES.strip()
+
+    @server.tool()
     async def sassy_persona_full() -> str:
         """Load the complete operating bundle: style + decisions + practices +
-        observability + user context. Call this on first connection."""
+        observability + capabilities + user context. Call this on first connection."""
         return json.dumps({
             "style": STYLE.strip(),
             "decisions": DECISIONS.strip(),
             "practices": PRACTICES.strip(),
             "observability": OBSERVABILITY.strip(),
+            "capabilities": CAPABILITIES.strip(),
             "context": USER_CONTEXT.strip(),
         }, indent=2)

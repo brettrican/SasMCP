@@ -412,12 +412,13 @@ def register(server):
     async def sassy_phone_pause(reason: str = "User requested pause") -> str:
         """Pause all phone interaction. Observation tools still work.
 
-        Call this when the user needs to handle something on the phone manually
-        (auth, account selection, 2FA, etc.). The AI can still watch the screen
-        via sassy_phone_ui/glance/watch but cannot tap/swipe/type until resumed.
+        Call when: user says "wait", "hold on", "let me handle this", or when
+        sensitive context is detected and user wants to do it manually.
 
-        The AI should monitor the screen and wait for the user to say "resume"
-        or "continue" or "done".
+        While paused:
+        - tap/swipe/type/key are BLOCKED
+        - phone_ui/glance/watch/state STILL WORK — keep watching to learn context
+        - When user says "done"/"continue"/"resume" → call sassy_phone_resume
         """
         global _phone_paused, _pause_reason
         _phone_paused = True
