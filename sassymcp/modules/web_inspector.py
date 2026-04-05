@@ -13,6 +13,87 @@ import tempfile
 from pathlib import Path
 
 
+def _register_hooks():
+    from sassymcp.modules._hooks import register_hook
+
+    register_hook(
+        name="web_audit",
+        module="web_inspector",
+        description="Full website audit — security, performance, practicality, content, technical",
+        triggers=["audit website", "audit site", "check my site", "evaluate website", "review site",
+                  "website security", "is my site secure", "site audit", "web audit"],
+        instructions="""
+## Website Audit Playbook
+
+Do NOT just check headers and call it done. Evaluate through FIVE lenses, in order:
+
+### 1. SECURITY (sassy_url_headers)
+- Grade the security headers (A+ to F)
+- Check: HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+- Flag missing critical headers with specific recommendations
+- Check for server info leakage (server header, x-powered-by)
+
+### 2. PERFORMANCE (sassy_url_performance)
+- Response time (target: <200ms)
+- Page size and compression (gzip/brotli?)
+- Cache-Control headers (are static assets cached?)
+- External resource count (CDN usage, third-party scripts)
+
+### 3. TECHNICAL (sassy_url_tech_stack)
+- What's the stack? (CDN, CMS, framework, hosting)
+- Version exposure? (outdated? known CVEs?)
+- Architecture assessment (serverless vs traditional, static vs dynamic)
+
+### 4. CONTENT & LINKS (sassy_url_links)
+- Internal link structure (navigation makes sense?)
+- External dependencies (fonts, analytics, third-party)
+- Broken links or orphaned pages
+- Anchor structure (proper in-page navigation?)
+
+### 5. PRACTICALITY (the lens most audits miss)
+- Does the site accomplish its PURPOSE?
+- Is the value proposition clear within 5 seconds?
+- Are CTAs visible and actionable?
+- Would a customer trust this site enough to buy/hire?
+- Mobile considerations (viewport, tap targets, load time)
+- Is contact info easy to find?
+
+### Report Format:
+Grade each lens (A-F), then overall assessment with prioritized action items.
+Don't list what's fine — focus on what needs fixing, ordered by impact.
+""",
+    )
+
+    register_hook(
+        name="web_recon",
+        module="web_inspector",
+        description="Technology reconnaissance — discover what a site runs on",
+        triggers=["what tech", "tech stack", "what's running", "what framework", "recon site", "scan website"],
+        instructions="""
+## Web Technology Reconnaissance Playbook
+
+### Tools in order:
+1. sassy_url_tech_stack — CDN, CMS, framework detection from headers + HTML
+2. sassy_url_headers — server headers, security posture, infrastructure clues
+3. sassy_url_links — external deps reveal CDN, font providers, analytics
+4. sassy_url_performance — compression type, caching strategy, hosting quality
+5. sassy_http — raw request to check specific endpoints (/robots.txt, /sitemap.xml, /.well-known/)
+
+### What to look for:
+- Server header → hosting platform
+- X-Powered-By → framework/language
+- CSP header → third-party services in use
+- Link tags → CMS indicators (wp-content, _next, etc.)
+- Script sources → analytics, A/B testing, chat widgets
+""",
+    )
+
+try:
+    _register_hooks()
+except Exception:
+    pass
+
+
 def register(server):
 
     @server.tool()

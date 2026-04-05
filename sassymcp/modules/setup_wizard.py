@@ -18,6 +18,55 @@ from pathlib import Path
 
 logger = logging.getLogger("sassymcp.setup")
 
+
+def _register_hooks():
+    from sassymcp.modules._hooks import register_hook
+
+    register_hook(
+        name="onboarding",
+        module="setup_wizard",
+        description="New user onboarding — guided setup flow for first-time users",
+        triggers=["setup", "first time", "configure", "get started", "onboard", "new user",
+                  "initial setup", "set up sassymcp"],
+        instructions="""
+## Onboarding Playbook
+
+Guide new users through setup in THIS order. Each step can be skipped.
+
+### Step 1: Persona (sassy_setup_wizard)
+Ask about: role, expertise level, languages, frameworks, communication style.
+Keep it conversational — don't dump all parameters at once.
+"What do you do? What languages do you work with? Prefer terse or detailed responses?"
+
+### Step 2: GitHub (sassy_setup_github)
+1. action="check" — is a token already set?
+2. If not: action="open_browser" — opens the token creation page
+3. Walk them through scope selection (Contents, Issues, PRs, Metadata)
+4. action="save_token" with their token — validates and saves
+5. If they don't use GitHub: action="skip"
+
+### Step 3: SSH / Linux (sassy_setup_ssh)
+1. action="check" — plink installed? Credentials set?
+2. If they have a Linux server: collect host, user, password
+3. action="save" then action="test" to verify
+4. If no Linux: action="skip"
+
+### Step 4: Optional Tools (sassy_setup_check_tools)
+Run and present results. For missing tools, provide install URLs.
+Don't push — just inform what's available and what it enables.
+
+### Tone:
+- First-time users: patient, explain what each thing does
+- Returning users: fast, just confirm what changed
+- Call sassy_setup_status to check what's already configured
+""",
+    )
+
+try:
+    _register_hooks()
+except Exception:
+    pass
+
 _SASSYMCP_DIR = Path.home() / ".sassymcp"
 _PERSONA_FILE = _SASSYMCP_DIR / "persona.md"
 _CONFIG_FILE = _SASSYMCP_DIR / "config.json"

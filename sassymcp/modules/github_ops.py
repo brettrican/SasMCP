@@ -13,6 +13,80 @@ Requires: GITHUB_TOKEN env var, httpx (pip install httpx)
 import base64
 import json
 import logging
+
+
+def _register_hooks():
+    from sassymcp.modules._hooks import register_hook
+
+    register_hook(
+        name="code_review",
+        module="github_ops",
+        description="Code review — systematic PR and code evaluation",
+        triggers=["review code", "code review", "review pr", "review pull request", "check this code",
+                  "review changes", "look at this pr"],
+        instructions="""
+## Code Review Playbook
+
+### Process:
+1. sassy_gh_get_pr — understand the PR scope, title, description
+2. sassy_gh_pr_files — list all changed files
+3. sassy_gh_get_file_contents for each changed file — read the actual code
+4. sassy_gh_pr_review_comments — see existing feedback
+5. sassy_gh_pr_status — check CI/CD status
+
+### Evaluation Criteria:
+- **Correctness**: Does the code do what the PR claims?
+- **Security**: Input validation, injection risks, auth checks, secret handling
+- **Error handling**: Failure modes covered? Graceful degradation?
+- **Performance**: O(n) complexity issues? N+1 queries? Unnecessary allocations?
+- **Readability**: Clear naming? Appropriate abstraction level?
+- **Tests**: Are the changes tested? Are edge cases covered?
+
+### Don't:
+- Don't nitpick style if there's a formatter configured
+- Don't suggest refactors unrelated to the PR scope
+- Don't approve without actually reading the diff
+""",
+    )
+
+    register_hook(
+        name="repo_audit",
+        module="github_ops",
+        description="Repository audit — security, CI/CD, branch protection, dependencies",
+        triggers=["audit repo", "audit repository", "check repo security", "repo health",
+                  "is this repo secure", "repository audit"],
+        instructions="""
+## Repository Audit Playbook
+
+### 1. ACCESS & PROTECTION
+- sassy_gh_get_branch_protection — main branch protected? Required reviews?
+- sassy_gh_list_branches — stale branches? Feature branches lingering?
+
+### 2. SECURITY SCANNING
+- sassy_gh_list_code_scanning — open code scanning alerts
+- sassy_gh_list_secret_scanning — exposed secrets
+- sassy_gh_list_dependabot — vulnerable dependencies
+
+### 3. CI/CD HEALTH
+- sassy_gh_list_runs — recent workflow runs passing?
+- sassy_gh_get_job_logs on failed runs — what's breaking?
+
+### 4. REPOSITORY HYGIENE
+- sassy_gh_list_issues state=open — issue backlog size
+- sassy_gh_list_prs state=open — PR backlog, stale PRs
+- sassy_gh_get_latest_release — when was last release?
+- sassy_gh_list_labels — organized labeling system?
+
+### Report:
+Flag security findings as CRITICAL/WARNING/INFO.
+Prioritize: exposed secrets > vulnerable deps > missing branch protection > CI failures > hygiene
+""",
+    )
+
+try:
+    _register_hooks()
+except Exception:
+    pass
 from typing import Any, Optional
 
 logger = logging.getLogger("sassymcp.github_ops")

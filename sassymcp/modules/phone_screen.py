@@ -117,6 +117,121 @@ def _parse_ui_xml(xml_text: str) -> list[dict]:
 _scrcpy_proc = None
 
 
+def _register_hooks():
+    from sassymcp.modules._hooks import register_hook
+
+    register_hook(
+        name="phone_autonomous",
+        module="phone_screen",
+        description="Autonomous phone control — operate the phone with minimal user intervention",
+        triggers=["use my phone", "open app", "do this on my phone", "phone task", "automate phone", "set up app"],
+        instructions="""
+## Autonomous Phone Control Playbook
+
+You are operating the user's Android phone. Work methodically.
+
+### Before ANY interaction:
+1. sassy_phone_state — check screen on, foreground app, battery
+2. sassy_phone_ui — read the full UI tree to understand what's on screen
+3. Plan your taps based on element coordinates from the UI tree
+4. NEVER guess coordinates — always read the UI tree first
+
+### Interaction Loop:
+1. Read UI tree → identify target element → get its center coordinates
+2. Tap/swipe/type → wait 1-2 seconds for UI to update
+3. Read UI tree again → verify the action worked
+4. If unexpected result → read UI tree, reassess, don't retry blindly
+
+### Sensitive Context (AUTOMATIC):
+- tap/swipe/type auto-check for login/payment/auth screens
+- If blocked: describe what you see, ask the user, call with confirmed=True only after approval
+- NEVER set confirmed=True without the user explicitly saying yes
+
+### When to Pause:
+- User says "wait", "hold on", "let me" → sassy_phone_pause
+- You detect the user needs to enter credentials → suggest pausing
+- Keep watching during pause — you learn from what the user does
+- Resume only when user says "done"/"continue"/"go"
+
+### Navigation:
+- sassy_phone_key("HOME") — go to home screen
+- sassy_phone_key("BACK") — go back
+- sassy_phone_key("APP_SWITCH") — recent apps
+- sassy_phone_open("com.package.name") — launch specific app
+""",
+    )
+
+    register_hook(
+        name="phone_supervised",
+        module="phone_screen",
+        description="Supervised phone mode — user drives, AI watches and assists",
+        triggers=["watch my phone", "help me with phone", "guide me", "what do i tap", "walk me through"],
+        instructions="""
+## Supervised Phone Playbook
+
+The user is operating the phone. You are watching and advising.
+
+### Your Role:
+- Observe via sassy_phone_ui and sassy_phone_glance
+- Describe what you see when asked
+- Suggest next steps based on the UI tree
+- Read text the user can't see clearly
+- Watch for errors or wrong paths
+
+### DO:
+- Poll sassy_phone_ui every few seconds to stay current
+- Tell the user exactly what to tap (element text + position)
+- Warn if the user is about to do something destructive
+- Note what app is in foreground via sassy_phone_state
+
+### DON'T:
+- Don't use tap/swipe/type — the user is driving
+- Don't assume you know what the user sees — always read the UI tree
+- Don't give instructions from memory — verify the current screen state first
+""",
+    )
+
+    register_hook(
+        name="phone_debug",
+        module="phone_screen",
+        description="Diagnose phone issues — crashes, slow apps, connectivity, storage",
+        triggers=["phone problem", "app crashing", "phone slow", "debug phone", "phone not working", "diagnose phone"],
+        instructions="""
+## Phone Debugging Playbook
+
+Diagnose Android issues systematically.
+
+### Triage (do these first):
+1. sassy_phone_state — screen on? battery level? wifi connected?
+2. sassy_adb_devices — device connected and authorized?
+3. sassy_phone_ui — can we read the UI? (rules out frozen/locked state)
+
+### App Issues:
+- App crashing → sassy_adb_logcat with app filter, look for FATAL/ANR
+- App slow → sassy_android_processes to check CPU/memory usage
+- App not opening → sassy_adb_app_info to check package status
+- Force stop: sassy_adb_shell "am force-stop com.package.name"
+- Clear data: sassy_adb_shell "pm clear com.package.name" (WARNING: destructive)
+
+### System Issues:
+- Storage: sassy_adb_shell "df -h" or "dumpsys diskstats"
+- Battery drain: sassy_adb_shell "dumpsys batterystats"
+- Network: sassy_adb_shell "ping -c 3 google.com"
+- Running services: sassy_adb_shell "dumpsys activity services"
+
+### Always:
+- Check logcat BEFORE and AFTER reproducing an issue
+- Use sassy_phone_watch to observe UI changes during reproduction
+- Report findings with specific log lines, not summaries
+""",
+    )
+
+try:
+    _register_hooks()
+except Exception:
+    pass
+
+
 def _find_scrcpy():
     path = shutil.which("scrcpy")
     if path:

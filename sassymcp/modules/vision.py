@@ -37,6 +37,70 @@ def _find_window_rect(title_substring: str):
     return None
 
 
+def _register_hooks():
+    from sassymcp.modules._hooks import register_hook
+
+    register_hook(
+        name="desktop_monitor",
+        module="vision",
+        description="Real-time desktop monitoring — watch for changes, verify actions",
+        triggers=["watch screen", "monitor desktop", "watch for changes", "keep an eye on", "wait for", "verify it worked"],
+        instructions="""
+## Desktop Monitoring Playbook
+
+You are monitoring the desktop in real-time. Use the lightest tool that answers the question.
+
+### Tool Selection:
+- **Quick check** (did something change?) → sassy_screen_glance (3KB, instant)
+- **Wait for change** (watching for something to appear) → sassy_screen_watch (auto-detects changes over duration)
+- **Verify action** (did my click/command work?) → sassy_screen_diff (before + after + highlighted diff)
+- **Need to read text** → sassy_screen_ocr (if Tesseract installed) or sassy_screen_glance + describe
+- **Full detail needed** → sassy_screen_capture (14KB, color, high-res) — use sparingly
+
+### Polling Pattern:
+1. Take a glance to establish baseline
+2. Perform the action you want to verify
+3. Use screen_diff or screen_watch to detect the result
+4. If change detected, take one more glance to confirm final state
+
+### Don't:
+- Don't use sassy_screen_capture for repeated monitoring (too heavy)
+- Don't poll faster than 0.5s interval (diminishing returns)
+- Don't take screenshots just to report "nothing changed" — only surface changes
+""",
+    )
+
+    register_hook(
+        name="desktop_debug",
+        module="vision",
+        description="Debug UI issues — identify visual problems, layout errors, state mismatches",
+        triggers=["debug ui", "what's wrong with the screen", "why does it look", "ui broken", "layout issue", "visual bug"],
+        instructions="""
+## Desktop UI Debugging Playbook
+
+You are diagnosing a visual or UI problem on the desktop.
+
+### Process:
+1. **Capture current state** — sassy_screen_capture (full color, high-res for this use case)
+2. **Identify windows** — sassy_list_windows to see all windows with positions, sizes, processes
+3. **Check specific window** — sassy_screen_capture with window_title to isolate
+4. **Read text** — sassy_screen_ocr if you need to read error messages
+5. **Compare states** — sassy_screen_diff before/after an action
+
+### Common Issues:
+- Window off-screen → check coordinates in sassy_list_windows, use sassy_snap_window
+- Dialog hidden behind another window → sassy_focus_window
+- UI not responding → sassy_processes to check CPU usage, sassy_screen_watch to see if it's frozen
+- Wrong content displayed → sassy_screen_ocr to read what's actually shown
+""",
+    )
+
+try:
+    _register_hooks()
+except Exception:
+    pass
+
+
 def register(server):
 
     @server.tool()

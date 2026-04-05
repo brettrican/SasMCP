@@ -22,6 +22,15 @@ from sassymcp.modules._tool_loader import (
     estimate_tool_context_tokens,
     minify_github_response,
 )
+from sassymcp.modules._hooks import (
+    get_all_hooks,
+    get_hook,
+    activate_hook,
+    deactivate_hook,
+    get_active_hooks,
+    clear_active_hooks,
+    suggest_hooks,
+)
 
 
 def register(server):
@@ -161,3 +170,85 @@ def register(server):
 
         except json.JSONDecodeError as e:
             return json.dumps({"error": f"Invalid JSON: {e}"})
+
+    # ── Hook Management ──────────────────────────────────────────
+
+    @server.tool()
+    async def sassy_hooks_list() -> str:
+        """List all available operational hooks.
+
+        Hooks are expert playbooks that teach the AI HOW to approach a task.
+        When activated, the AI gets pre-loaded domain expertise — the right
+        "lens" for the job. Use sassy_hooks_activate to load one.
+        """
+        hooks = get_all_hooks()
+        return json.dumps({
+            "hooks": hooks,
+            "count": len(hooks),
+            "active": [h["name"] for h in get_active_hooks()],
+            "hint": "Call sassy_hooks_activate with a hook name to load its playbook.",
+        }, indent=2)
+
+    @server.tool()
+    async def sassy_hooks_activate(hook_name: str) -> str:
+        """Activate an operational hook. Returns the full expert playbook.
+
+        The playbook contains step-by-step instructions for HOW to approach
+        the task — which tools to use, in what order, what to look for,
+        and what NOT to do. Follow it.
+
+        Use sassy_hooks_list to see available hooks.
+        """
+        hook = activate_hook(hook_name)
+        if not hook:
+            # Try fuzzy match
+            all_hooks = get_all_hooks()
+            suggestions = [name for name in all_hooks if hook_name.lower() in name.lower()]
+            return json.dumps({
+                "error": f"Hook '{hook_name}' not found",
+                "available": list(all_hooks.keys()),
+                "suggestions": suggestions,
+            })
+
+        return json.dumps({
+            "activated": hook["name"],
+            "module": hook["module"],
+            "description": hook["description"],
+            "instructions": hook["instructions"],
+            "note": "Follow the playbook above. It was written by experts for this exact task.",
+        }, indent=2)
+
+    @server.tool()
+    async def sassy_hooks_deactivate(hook_name: str = "") -> str:
+        """Deactivate a hook or all hooks.
+
+        hook_name: specific hook to deactivate, or empty to clear all.
+        """
+        if not hook_name:
+            clear_active_hooks()
+            return json.dumps({"status": "all hooks deactivated"})
+
+        if deactivate_hook(hook_name):
+            return json.dumps({"deactivated": hook_name})
+        return json.dumps({"error": f"Hook '{hook_name}' was not active"})
+
+    @server.tool()
+    async def sassy_hooks_suggest(user_text: str) -> str:
+        """Suggest hooks based on what the user is trying to do.
+
+        Pass the user's request text. Returns matching hooks ranked by relevance.
+        The AI should call this when it's unsure which hook to use, or
+        proactively when the user's request matches a known domain.
+        """
+        matches = suggest_hooks(user_text)
+        if not matches:
+            return json.dumps({
+                "suggestions": [],
+                "note": "No hooks match this request. Proceeding without a playbook.",
+            })
+
+        return json.dumps({
+            "suggestions": matches,
+            "top_match": matches[0]["name"],
+            "hint": f"Consider activating '{matches[0]['name']}' — {matches[0]['description']}",
+        }, indent=2)

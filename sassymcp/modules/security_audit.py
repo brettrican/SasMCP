@@ -4,6 +4,92 @@ import asyncio
 import hashlib
 import json
 
+
+def _register_hooks():
+    from sassymcp.modules._hooks import register_hook
+
+    register_hook(
+        name="security_scan",
+        module="security_audit",
+        description="System security assessment — firewall, defender, certs, permissions, autoruns",
+        triggers=["security scan", "security audit", "check security", "am i secure", "hardening check",
+                  "system security", "security assessment"],
+        instructions="""
+## System Security Assessment Playbook
+
+Evaluate the system's security posture across all available vectors.
+
+### 1. PERIMETER (network exposure)
+- sassy_open_ports — what's listening? Flag unexpected services.
+- sassy_firewall_status — all profiles ON? Policy correct?
+- sassy_netstat — active connections to unknown IPs?
+
+### 2. DEFENSE (endpoint protection)
+- sassy_defender_status — Defender active? Signatures current?
+- sassy_autorun_entries — anything suspicious in startup?
+- sassy_eventlog_search keyword="error" or keyword="warning" — recent security events
+
+### 3. CERTIFICATES (TLS health)
+- sassy_cert_check on any exposed services — valid? Expiring soon?
+- Check cert chain, issuer, SAN coverage
+
+### 4. FILE INTEGRITY (spot checks)
+- sassy_hash_file on critical binaries/configs — compare against known-good
+- sassy_file_permissions on sensitive directories — ACLs correct?
+
+### 5. PROCESS AUDIT
+- sassy_processes — anything unexpected running? High CPU/memory anomalies?
+- Cross-reference with sassy_autorun_entries — is everything accounted for?
+
+### Report:
+- CRITICAL: immediate action required (exposed services, disabled firewall, malware indicators)
+- WARNING: should fix soon (expiring certs, missing hardening, weak permissions)
+- INFO: noted for awareness (configuration details, version info)
+""",
+    )
+
+    register_hook(
+        name="forensics",
+        module="security_audit",
+        description="Digital forensics investigation — evidence collection, timeline analysis",
+        triggers=["forensics", "investigate", "breach", "compromise", "incident", "suspicious activity",
+                  "was i hacked", "malware check"],
+        instructions="""
+## Digital Forensics Playbook
+
+PRESERVE EVIDENCE FIRST. Read-only operations until you understand the scope.
+
+### Phase 1: TRIAGE (read-only)
+- sassy_processes — snapshot running processes NOW
+- sassy_netstat — snapshot active connections NOW
+- sassy_open_ports — what's listening that shouldn't be?
+- sassy_autorun_entries — new/unknown startup items?
+- sassy_eventlog count=50 — recent system events
+- sassy_defender_status — any recent detections?
+
+### Phase 2: TIMELINE
+- sassy_eventlog_search keyword="<suspicious term>" — correlate events
+- sassy_audit_log — SassyMCP's own activity log
+- sassy_file_info on suspicious files — timestamps (created, modified, accessed)
+
+### Phase 3: INDICATORS
+- sassy_hash_file on suspicious files — check against known malware hashes
+- sassy_dns_lookup on suspicious domains from netstat
+- sassy_cert_check on suspicious TLS connections
+
+### Rules:
+- NEVER modify files or kill processes until evidence is documented
+- Hash before touching — sassy_hash_file first
+- If active threat found: recommend isolation, don't remediate without approval
+""",
+    )
+
+try:
+    _register_hooks()
+except Exception:
+    pass
+
+
 def register(server):
     @server.tool()
     async def sassy_hash_file(path: str, algorithm: str = "sha256") -> str:

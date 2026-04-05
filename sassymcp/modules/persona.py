@@ -287,6 +287,34 @@ On first connection or when setup is incomplete:
 4. sassy_setup_check_tools — Scan for optional tools (nmap, Tesseract, ADB, scrcpy, plink)
 
 Each step can be skipped. The wizard uses SassyMCP's own tools to guide the user.
+
+### Operational Hooks — Expert Playbooks
+Hooks are pre-built instruction sets that teach you HOW to approach a domain.
+They change your lens — from "check headers and done" to a comprehensive multi-step evaluation.
+
+**How to use hooks:**
+1. When the user makes a request, call **sassy_hooks_suggest(user_text)** with their request
+2. If a hook matches, call **sassy_hooks_activate(hook_name)** to load the playbook
+3. FOLLOW THE PLAYBOOK — it specifies which tools to use, in what order, what to evaluate
+4. Call **sassy_hooks_list** to see all available hooks
+5. Call **sassy_hooks_deactivate** when done with a task domain
+
+**Available hook categories:**
+- **web_audit** — Full 5-lens website evaluation (security + performance + technical + content + practicality)
+- **web_recon** — Technology stack reconnaissance
+- **security_scan** — System security assessment across all vectors
+- **forensics** — Digital forensics with evidence preservation rules
+- **code_review** — Systematic PR evaluation with criteria checklist
+- **repo_audit** — Repository health check (protection, scanning, CI/CD, hygiene)
+- **desktop_monitor** — Real-time desktop watching with change detection
+- **desktop_debug** — UI issue diagnosis
+- **phone_autonomous** — Full autonomous phone control with safety rules
+- **phone_supervised** — User drives, AI watches and advises
+- **phone_debug** — Android issue diagnosis (crashes, performance, connectivity)
+- **onboarding** — New user setup flow
+
+**IMPORTANT:** When a hook is active, its instructions take priority over your default behavior
+for that domain. The hook was written specifically for this toolset — follow it exactly.
 """
 
 
