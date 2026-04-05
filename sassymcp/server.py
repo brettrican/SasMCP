@@ -46,11 +46,14 @@ from sassymcp.modules._tool_loader import (
     get_group_for_tool,
     get_group_for_module,
     register_tool_group,
+    resolve_dependencies,
     validate_tool,
     enable_live_reload,
     compute_schema_version,
     TOOL_GROUPS,
 )
+
+from sassymcp.license import get_allowed_groups, weekly_validation_check
 
 
 # ── Self-Signed Cert Generation ──────────────────────────────────────
@@ -133,29 +136,38 @@ mcp = _build_server()
 # ── Module Resolution ─────────────────────────────────────────────────
 
 def _resolve_modules() -> list[str]:
-    """Determine which modules to load based on env vars.
+    """Determine which modules to load based on license tier + env vars.
     Priority:
-    1. SASSYMCP_LOAD_ALL=1 -> load everything
-    2. SASSYMCP_GROUPS=core,github_quick -> load specific groups
-    3. Default: load always_load=True groups only
+    1. License tier gates which groups are available
+    2. SASSYMCP_LOAD_ALL=1 -> load all ALLOWED modules
+    3. SASSYMCP_GROUPS=core,github_quick -> load specific ALLOWED groups
+    4. Default: load always_load=True groups (intersected with allowed)
     """
+    allowed_groups = get_allowed_groups()
+
     if os.environ.get("SASSYMCP_LOAD_ALL", "").strip() == "1":
-        logger.info("SASSYMCP_LOAD_ALL=1 — loading all modules")
-        return get_all_modules()
+        modules = []
+        for group_name, group_info in TOOL_GROUPS.items():
+            if group_name in allowed_groups:
+                modules.extend(group_info["modules"])
+        if modules:
+            logger.info(f"SASSYMCP_LOAD_ALL=1 — loading allowed modules: {modules}")
+            return resolve_dependencies(modules)
+        return get_default_modules()
 
     groups_env = os.environ.get("SASSYMCP_GROUPS", "").strip()
     if groups_env:
         requested = [g.strip() for g in groups_env.split(",") if g.strip()]
-        if "all" in requested:
-            return get_all_modules()
         modules = []
         for g in requested:
-            if g in TOOL_GROUPS:
+            if g in TOOL_GROUPS and g in allowed_groups:
                 modules.extend(TOOL_GROUPS[g]["modules"])
+            elif g in TOOL_GROUPS and g not in allowed_groups:
+                logger.warning(f"Group '{g}' requires Pro license — skipped")
             else:
                 logger.warning(f"Unknown group: {g}")
         logger.info(f"SASSYMCP_GROUPS={groups_env} — loading: {modules}")
-        return modules
+        return resolve_dependencies(modules)
 
     defaults = get_default_modules()
     logger.info(f"Default load: {defaults}")
@@ -456,6 +468,12 @@ def _load_modules():
     if os.environ.get("SASSYMCP_DEV") == "1":
         modules_dir = Path(__file__).parent / "modules"
         enable_live_reload(mcp, modules_dir)
+
+    # Schedule weekly license validation (non-blocking background task)
+    try:
+        asyncio.get_event_loop().create_task(weekly_validation_check())
+    except RuntimeError:
+        pass  # No event loop yet — will run on first request
 
 
 # ── Entry Point ────────────────────────────────────────────────────────
