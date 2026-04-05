@@ -33,6 +33,12 @@ def _register_hooks():
 
 Guide new users through setup in THIS order. Each step can be skipped.
 
+### Step 0: License (sassy_setup_license)
+1. action="status" — check current tier
+2. If free: mention upgrade at sassyconsultingllc.com/sassymcp ($29/mo)
+3. If they have a key: action="activate" with their key
+4. Don't push — just inform what Pro unlocks and move on
+
 ### Step 1: Persona (sassy_setup_wizard)
 Ask about: role, expertise level, languages, frameworks, communication style.
 Keep it conversational — don't dump all parameters at once.
@@ -673,6 +679,66 @@ def register(server):
                 "missing": [k for k, v in tools.items() if not v["installed"]],
             },
         }, indent=2)
+
+    # ── License Management ───────────────────────────────────────
+
+    @server.tool()
+    async def sassy_setup_license(key: str = "", action: str = "status") -> str:
+        """Manage your SassyMCP license. Activate a Pro key, check status, or deactivate.
+
+        action: status | activate | deactivate
+        key: license key string (required for activate action)
+        """
+        from sassymcp.license import validate_license, save_license, remove_license, LICENSE_FILE
+
+        if action == "status":
+            result = validate_license()
+            tier = result.get("tier", "free")
+            info = {
+                "tier": tier,
+                "valid": result.get("valid", False),
+                "email": result.get("email"),
+                "expires": result.get("expires"),
+                "license_file": str(LICENSE_FILE),
+                "license_exists": LICENSE_FILE.exists(),
+            }
+            if tier == "free" and not result.get("valid"):
+                info["upgrade"] = {
+                    "url": "https://sassyconsultingllc.com/sassymcp",
+                    "price": "$29/mo",
+                    "what_you_get": "255 tools, persistent memory, dynamic vision, phone control, "
+                                    "GitHub full API, operational hooks, self-modification, and more.",
+                }
+            return json.dumps(info, indent=2)
+
+        elif action == "activate":
+            if not key:
+                return json.dumps({"error": "Provide the key parameter with your license key.",
+                                   "get_key": "https://sassyconsultingllc.com/sassymcp"})
+            result = save_license(key)
+            if result.get("valid"):
+                return json.dumps({
+                    "status": "activated",
+                    "tier": result["tier"],
+                    "email": result.get("email"),
+                    "expires": result.get("expires"),
+                    "note": "Restart the server to load all Pro tools, or call sassy_selfmod_restart().",
+                }, indent=2)
+            return json.dumps({
+                "status": "failed",
+                "reason": result.get("reason"),
+                "hint": "Check the key and try again. Keys start with sassy_pro_ or sassy_forensics_.",
+            })
+
+        elif action == "deactivate":
+            remove_license()
+            return json.dumps({
+                "status": "deactivated",
+                "tier": "free",
+                "note": "Downgraded to free tier. Restart to apply.",
+            })
+
+        return json.dumps({"error": f"Unknown action: {action}. Use: status, activate, deactivate"})
 
     # ── Updated setup_status with integration fields ─────────────
 
