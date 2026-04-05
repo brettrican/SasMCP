@@ -254,6 +254,13 @@ TOOL_GROUPS = {
         "max_concurrent": 3,
         "calls_per_minute": 30,
     },
+    "memory": {
+        "modules": ["memory"],
+        "description": "Persistent cross-session memory, task handoffs, milestones, pattern learning",
+        "always_load": True,
+        "max_concurrent": 10,
+        "calls_per_minute": 120,
+    },
 }
 
 

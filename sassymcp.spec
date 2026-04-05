@@ -51,6 +51,8 @@ a = Analysis(
         'sassymcp.modules.utility',
         'sassymcp.modules.selfmod',
         'sassymcp.modules.setup_wizard',
+        'sassymcp.modules.memory',
+        'sassymcp.modules._hooks',
         # Infrastructure
         'sassymcp.modules.state_manager',
         'sassymcp.modules.observability',
