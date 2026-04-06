@@ -164,6 +164,33 @@ def validate_url(url: str, allow_private: bool = False) -> tuple[bool, Optional[
     return True, None
 
 
+# ── Delete Command Detection ────────────────────────────────────────
+
+# Commands that indicate file/directory deletion intent.
+# These are intercepted and targets are moved to a _DELETE_ staging folder
+# instead of being destroyed — minimising data loss from AI hallucinations.
+_DELETE_KEYWORDS = frozenset({
+    "rm", "rmdir", "unlink",          # Unix / WSL
+    "del", "erase", "rd",             # Windows CMD
+    "remove-item",                     # PowerShell
+})
+
+
+def detect_delete_intent(command: str) -> tuple[bool, str]:
+    """Detect if a command attempts to delete files/directories.
+
+    Returns (is_delete, matched_keyword).
+    Delete commands are intercepted — targets are moved to a _DELETE_
+    staging folder instead of being destroyed.
+    """
+    segments = re.split(r'[;&|\n]+', command.lower())
+    for seg in segments:
+        words = seg.strip().split()
+        if words and words[0] in _DELETE_KEYWORDS:
+            return True, words[0]
+    return False, ""
+
+
 # ── Input Size Validation ────────────────────────────────────────────
 
 def validate_input_size(value: str, max_bytes: int = 10_000_000, label: str = "input") -> tuple[bool, Optional[str]]:

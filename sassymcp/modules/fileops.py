@@ -20,7 +20,45 @@ def _check_path(path: str) -> str | None:
     return None
 
 
+_STAGING_FOLDER = "_DELETE_"
+
+
 def register(server):
+
+    @server.tool()
+    async def sassy_safe_delete(path: str) -> str:
+        """Move a file or directory to a _DELETE_ staging folder for review.
+
+        Instead of permanent deletion, items are moved to a _DELETE_ folder
+        in the same parent directory. This minimises data loss from AI
+        hallucinations or accidental deletions.
+        """
+        err = _check_path(path)
+        if err:
+            return f"Error: {err}"
+        p = Path(path).resolve()
+        if not p.exists():
+            return f"Error: {path} does not exist"
+
+        staging = p.parent / _STAGING_FOLDER
+        staging.mkdir(exist_ok=True)
+        dest = staging / p.name
+
+        # Handle name collisions
+        if dest.exists():
+            stem = p.stem
+            suffix = p.suffix if p.is_file() else ""
+            counter = 1
+            while dest.exists():
+                new_name = f"{stem}_{counter}{suffix}" if suffix else f"{p.name}_{counter}"
+                dest = staging / new_name
+                counter += 1
+
+        try:
+            shutil.move(str(p), str(dest))
+            return f"Moved to staging: {p} -> {dest}"
+        except (OSError, shutil.Error) as e:
+            return f"Error moving to staging: {e}"
 
     @server.tool()
     async def sassy_read_file(path: str, offset: int = 0, length: int = 1000) -> str:
