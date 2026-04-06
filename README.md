@@ -1,8 +1,8 @@
 # SassyMCP
 
-**Unified MCP server for Windows desktop automation, Android device control, security auditing, GitHub operations, web inspection, cross-session communication, and AI workflow persona.**
+**One MCP server to replace them all.**
 
-**242 tools | 35 modules | 34MB standalone exe**
+**257 tools | 31 modules | Replaces 75+ MCP servers | 34MB standalone exe**
 
 Compatible with Claude Desktop, Grok Desktop, Cursor, Windsurf, and any MCP client.
 
@@ -10,7 +10,9 @@ Compatible with Claude Desktop, Grok Desktop, Cursor, Windsurf, and any MCP clie
 
 ## Why SassyMCP?
 
-SassyMCP replaces multiple fragmented MCP servers (Windows-MCP, Desktop Commander, Filesystem, GitHub, etc.) with a single modular server. One install, smaller context footprint, more tools, smarter loading.
+The MCP ecosystem is fragmented. Need file operations? Install Filesystem server. Need terminal? Desktop Commander. GitHub? Another server. Android? Another. Screenshots? Another. You end up with 6-10 separate MCP servers, each consuming context window, each with its own config, bugs, and update cycle.
+
+SassyMCP replaces **75+ individual MCP servers** — including [Desktop Commander](https://github.com/wonderwhy-er/DesktopCommanderMCP) (5.9k stars), [Windows-MCP](https://github.com/CursorTouch/Windows-MCP) (5k stars), [GitHub MCP Server](https://github.com/github/github-mcp-server) (28.6k stars), Anthropic's official [Filesystem](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) and [Memory](https://github.com/modelcontextprotocol/servers/tree/main/src/memory) servers, [mobile-mcp](https://github.com/mobile-next/mobile-mcp) (4.4k stars), and dozens more — with a single 34MB exe.
 
 **Key differentiators:**
 - **Smart Tool Loading** — Only loads tool groups you use. Reduces context window overhead from ~25K tokens to ~5K tokens by default.
@@ -23,6 +25,26 @@ SassyMCP replaces multiple fragmented MCP servers (Windows-MCP, Desktop Commande
 - **Safe Delete** — Delete commands (`rm`, `del`, `Remove-Item`, etc.) are intercepted across all shells. Instead of destroying files, targets are moved to a `_DELETE_/` staging folder in the same directory for human review — protecting against AI hallucinations.
 - **Self-Modification** — Hot-reload modules without restart, git-backed rollback on syntax errors.
 - **Guided Setup** — Wizard walks through persona, GitHub token, SSH credentials, and optional tool discovery.
+
+## What It Replaces
+
+| Domain | SassyMCP Module | Replaces | Top Alternative |
+|--------|----------------|----------|----------------|
+| File operations | FileOps, Editor | 11 filesystem/editor MCP servers | [Filesystem](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) (Anthropic official) |
+| Shell / terminal | Shell, Session | 5 shell MCP servers | [Desktop Commander](https://github.com/wonderwhy-er/DesktopCommanderMCP) (5.9k stars) |
+| Desktop automation | UIAutomation, Vision | 9 desktop MCP servers | [Windows-MCP](https://github.com/CursorTouch/Windows-MCP) (5k stars) |
+| GitHub / Git | GitHub Quick, GitHub Full | 5 GitHub/Git MCP servers | [GitHub MCP Server](https://github.com/github/github-mcp-server) (28.6k stars) |
+| Android / phone | ADB, PhoneScreen | 9 mobile MCP servers | [mobile-mcp](https://github.com/mobile-next/mobile-mcp) (4.4k stars) |
+| Network scanning | NetworkAudit | 8 nmap/security MCP servers | [mcp-for-security](https://github.com/cyproxio/mcp-for-security) (601 stars) |
+| Security auditing | SecurityAudit | 8 security MCP servers | [mcp-security-hub](https://github.com/FuzzingLabs/mcp-security-hub) (509 stars) |
+| SSH / remote Linux | Linux | 7 SSH MCP servers | [ssh-mcp](https://github.com/tufantunc/ssh-mcp) (365 stars) |
+| Memory / state | Memory, StateManager | 7 memory MCP servers | [mcp-memory-service](https://github.com/doobidoo/mcp-memory-service) (1.6k stars) |
+| OCR / screen reading | Vision | 7 OCR/vision MCP servers | [PaddleOCR MCP](https://paddlepaddle.github.io/PaddleOCR/) |
+| Web inspection | WebInspector, Utility | 7 web/fetch MCP servers | [Fetch](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) (Anthropic official) |
+| Windows system | Registry, ProcessManager, Clipboard, EventLog, Bluetooth | 13 Windows MCP servers | [Windows-MCP](https://github.com/CursorTouch/Windows-MCP) (5k stars) |
+| Hot reload | SelfMod | 3 reload MCP servers | [mcp-reloader](https://github.com/mizchi/mcp-reloader) |
+
+**Plus features with no MCP server equivalent:** phone pause/resume with sensitive context detection (auto-blocks on login/payment screens), operational hooks (14 expert playbooks), safe delete interception, Windows autorun forensics, Android+Windows clipboard sync, usage-weighted smart loading.
 
 ## Modules
 
@@ -156,7 +178,7 @@ By default, SassyMCP only loads frequently-used tool groups. This keeps tool def
 # Default: loads core, github_quick, persona, meta, utility, selfmod, setup, infrastructure
 uv run sassymcp
 
-# Load everything (242 tools, ~22K tokens of context)
+# Load everything (257 tools, ~22K tokens of context)
 SASSYMCP_LOAD_ALL=1 uv run sassymcp
 
 # Load specific groups
@@ -246,7 +268,7 @@ playwright install chromium
 
 | Variable | Purpose |
 |----------|---------|
-| `SASSYMCP_LOAD_ALL=1` | Load all 242 tools |
+| `SASSYMCP_LOAD_ALL=1` | Load all 257 tools |
 | `SASSYMCP_GROUPS=core,android` | Load specific groups |
 | `SASSYMCP_AUTH_TOKEN=xxx` | Bearer token for HTTP auth |
 | `SASSYMCP_DEV=1` | Enable live reload (dev mode) |
@@ -255,18 +277,20 @@ playwright install chromium
 | `SSH_USER=xxx` | Remote Linux username |
 | `SSH_PASS=xxx` | Remote Linux password |
 
-## Optional Tools
+## External Tools
 
-| Tool | Used By | Install |
-|------|---------|---------|
-| nmap | `sassy_port_scan` | [nmap.org](https://nmap.org/download.html) |
-| Tesseract | `sassy_screen_ocr`, `sassy_find_text_on_screen` | [tesseract-ocr](https://github.com/tesseract-ocr/tesseract) |
-| ADB | All `sassy_adb_*` + `sassy_phone_*` tools | [Android Platform Tools](https://developer.android.com/tools/releases/platform-tools) |
-| scrcpy | `sassy_scrcpy_*` tools | [scrcpy releases](https://github.com/Genymobile/scrcpy/releases) |
-| plink | `sassy_linux_exec` | [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) |
-| Chrome | `sassy_url_screenshot` | [google.com/chrome](https://www.google.com/chrome/) |
+All bundled in the [beta zip package](https://github.com/sassyconsultingllc/SassyMCP/releases). Install separately only if using the standalone exe.
 
-Run `sassy_setup_check_tools` to scan for all of these automatically.
+| Tool | Used By | Bundled | Install (if needed) |
+|------|---------|---------|---------------------|
+| ADB | All `sassy_adb_*` + `sassy_phone_*` tools | Yes | [Android Platform Tools](https://developer.android.com/tools/releases/platform-tools) |
+| nmap | `sassy_port_scan` | Yes | [nmap.org](https://nmap.org/download.html) |
+| plink | `sassy_linux_exec` | Yes | [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) |
+| scrcpy | `sassy_scrcpy_*` tools | Yes | [scrcpy releases](https://github.com/Genymobile/scrcpy/releases) |
+| Tesseract | `sassy_screen_ocr`, `sassy_find_text_on_screen` | Yes | [tesseract-ocr](https://github.com/tesseract-ocr/tesseract) |
+| Chrome | `sassy_url_screenshot` | No | [google.com/chrome](https://www.google.com/chrome/) |
+
+Run `sassy_setup_check_tools` to verify all tools are detected.
 
 ## Requirements
 
