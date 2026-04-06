@@ -2,7 +2,7 @@
 
 **Unified MCP server for Windows desktop automation, Android device control, security auditing, GitHub operations, web inspection, cross-session communication, and AI workflow persona.**
 
-**241 tools | 35 modules | 34MB standalone exe**
+**242 tools | 35 modules | 34MB standalone exe**
 
 Compatible with Claude Desktop, Grok Desktop, Cursor, Windsurf, and any MCP client.
 
@@ -20,6 +20,7 @@ SassyMCP replaces multiple fragmented MCP servers (Windows-MCP, Desktop Commande
 - **Usage Tracking** — ML-lite scoring of tool invocations with exponential decay. Your most-used tools load first.
 - **Context Estimation** — Built-in tool to measure how much of your 200K context window tool definitions consume.
 - **Response Minification** — GitHub API responses stripped of URL metadata bloat (40-70% smaller).
+- **Safe Delete** — Delete commands (`rm`, `del`, `Remove-Item`, etc.) are intercepted across all shells. Instead of destroying files, targets are moved to a `_DELETE_/` staging folder in the same directory for human review — protecting against AI hallucinations.
 - **Self-Modification** — Hot-reload modules without restart, git-backed rollback on syntax errors.
 - **Guided Setup** — Wizard walks through persona, GitHub token, SSH credentials, and optional tool discovery.
 
@@ -28,8 +29,8 @@ SassyMCP replaces multiple fragmented MCP servers (Windows-MCP, Desktop Commande
 | Module | Tools | Group | Description |
 |--------|-------|-------|-------------|
 | **Meta** | 5 | meta | Context estimation, tool usage analytics, group management |
-| **FileOps** | 9 | core | Read, write, search, move, copy, edit, mkdir, file info |
-| **Shell** | 1 | core | PowerShell, CMD, WSL execution with syntax normalization |
+| **FileOps** | 10 | core | Read, write, search, move, copy, edit, mkdir, file info, safe delete |
+| **Shell** | 1 | core | PowerShell, CMD, WSL execution with syntax normalization and delete interception |
 | **UIAutomation** | 6 | core | Desktop state, click, type, hotkeys, screenshots, screen info |
 | **Editor** | 2 | core | Surgical find/replace, multi-edit |
 | **Audit** | 3 | core | Audit log read, search, clear |
@@ -99,6 +100,24 @@ Full touch input via ADB — the AI can operate the phone:
 
 All interaction tools (tap, swipe, type) automatically scan the UI tree before executing. If they detect **login screens, payment forms, account selectors, 2FA prompts, or permission dialogs**, the tool **refuses to execute** and returns what it sees instead. The AI then describes the screen to you and asks what to do. Pass `confirmed=True` after explicit user approval.
 
+## Safe Delete (Delete Interception)
+
+AI agents can hallucinate destructive commands. SassyMCP intercepts **all** delete-family commands across every shell and moves targets to a `_DELETE_/` staging folder instead of destroying them.
+
+**Intercepted commands:** `rm`, `rmdir`, `unlink` (Unix/WSL), `del`, `erase`, `rd` (CMD), `Remove-Item` (PowerShell).
+
+| Scenario | Result |
+|----------|--------|
+| `rm -rf /` | **Hard-blocked** — catastrophic pattern, no move attempted |
+| `rm important.txt` | Blocked, file moved to `./_DELETE_/important.txt` |
+| `del /q *.log` | Blocked, all `.log` files moved to `./_DELETE_/` |
+| `Remove-Item -Path C:\data\old` | Blocked, `old` moved to `C:\data\_DELETE_\old` |
+| `ls -la` | Executes normally — not a delete command |
+
+The `sassy_safe_delete(path)` tool is also available for explicit use when the AI intends to remove something — it applies the same move-to-staging pattern.
+
+Name collisions in `_DELETE_/` are handled automatically with counter suffixes (`file.txt`, `file_1.txt`, `file_2.txt`).
+
 ### Pause / Resume
 
 For complex flows where the user needs to take over:
@@ -137,7 +156,7 @@ By default, SassyMCP only loads frequently-used tool groups. This keeps tool def
 # Default: loads core, github_quick, persona, meta, utility, selfmod, setup, infrastructure
 uv run sassymcp
 
-# Load everything (241 tools, ~22K tokens of context)
+# Load everything (242 tools, ~22K tokens of context)
 SASSYMCP_LOAD_ALL=1 uv run sassymcp
 
 # Load specific groups
@@ -227,7 +246,7 @@ playwright install chromium
 
 | Variable | Purpose |
 |----------|---------|
-| `SASSYMCP_LOAD_ALL=1` | Load all 241 tools |
+| `SASSYMCP_LOAD_ALL=1` | Load all 242 tools |
 | `SASSYMCP_GROUPS=core,android` | Load specific groups |
 | `SASSYMCP_AUTH_TOKEN=xxx` | Bearer token for HTTP auth |
 | `SASSYMCP_DEV=1` | Enable live reload (dev mode) |
