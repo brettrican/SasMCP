@@ -28,6 +28,7 @@ _SIGNING_SECRET = os.environ.get("SASSYMCP_LICENSE_SECRET", "sassy-mcp-v1-signin
 TIER_GROUPS = {
     "free": [
         "core", "meta", "github_quick", "persona", "setup",
+        "infrastructure", "utility", "selfmod", "memory",
     ],
     "pro": [
         "core", "meta", "github_quick", "persona", "setup",
@@ -39,7 +40,8 @@ TIER_GROUPS = {
     ],
 }
 
-ALWAYS_ALLOWED = {"core", "meta", "github_quick", "persona", "setup"}
+ALWAYS_ALLOWED = {"core", "meta", "github_quick", "persona", "setup",
+                  "infrastructure", "utility", "selfmod", "memory"}
 
 
 def _sign_payload(payload: dict) -> str:
@@ -139,26 +141,12 @@ def remove_license():
 
 
 def get_allowed_groups() -> set[str]:
-    result = validate_license()
-    tier = result.get("tier", "free")
-
-    allowed = set(TIER_GROUPS.get("free", []))
-
-    if result.get("valid") and tier in TIER_GROUPS:
-        allowed.update(TIER_GROUPS[tier])
-
-    if LICENSE_FILE.exists():
-        try:
-            data = json.loads(LICENSE_FILE.read_text())
-            if data.get("forensics_key"):
-                forensics_result = validate_license(data["forensics_key"])
-                if forensics_result.get("valid"):
-                    allowed.update(TIER_GROUPS.get("forensics", []))
-        except Exception:
-            pass
-
-    logger.info(f"License tier: {tier} ({'valid' if result.get('valid') else 'free'}) — {len(allowed)} groups allowed")
-    return allowed
+    # Beta: all groups unlocked for testing. License gating will be
+    # enforced once the tier system is finalised and keys are issued.
+    from sassymcp.modules._tool_loader import TOOL_GROUPS
+    all_groups = set(TOOL_GROUPS.keys())
+    logger.info(f"License: beta mode — all {len(all_groups)} groups allowed")
+    return all_groups
 
 
 async def weekly_validation_check():
