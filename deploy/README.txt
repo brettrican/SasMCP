@@ -1,75 +1,92 @@
 ===========================================================
- SassyMCP v1.0 - Setup Guide
- 241 tools | 35 modules | Windows + Android automation
+ SassyMCP v1.1.0 Beta — Setup Guide
+ 257 tools | 31 modules | All tools bundled
  Sassy Consulting LLC | sassyconsultingllc.com
 ===========================================================
 
- QUICK START:
+ QUICK START (zip package):
 
- 1. Run sassymcp.exe --setup
-    This starts the server and flags the setup wizard.
-    The first AI session will guide you through configuration.
+ 1. Unzip to any folder (e.g. C:\SassyMCP)
+ 2. Run start-beta.bat
+    This auto-sets PATH for all bundled tools (ADB, nmap,
+    plink, scrcpy, Tesseract) and starts with all 257 tools.
+ 3. The first AI session will guide you through setup.
+
+ BUNDLED TOOLS:
+
+ All five optional tools are included in this package:
+   tools\adb\        Android Debug Bridge (device control)
+   tools\nmap\       Network scanner (port scanning)
+   tools\putty\      plink SSH client (remote Linux)
+   tools\scrcpy\     Android screen mirroring
+   tools\tesseract\  Tesseract OCR engine + English data
+
+ No additional installs needed (except Chrome for web
+ screenshots — most systems already have it).
+
+ MCP CLIENT CONFIGURATION:
+
+ Claude Desktop — edit %APPDATA%\Claude\claude_desktop_config.json:
+
+   {
+     "mcpServers": {
+       "sassymcp": {
+         "command": "C:\\SassyMCP\\sassymcp.exe",
+         "env": { "SASSYMCP_LOAD_ALL": "1" }
+       }
+     }
+   }
+
+ Grok Desktop / Cursor / Windsurf — use HTTP mode:
+   Run start-beta.bat --http
+   Point your client to http://127.0.0.1:21001/mcp/
 
  GUIDED SETUP:
 
  After first launch, the AI will guide you through:
    sassy_setup_wizard      - Create your user profile
-   sassy_setup_github      - Connect GitHub (opens browser for token)
-   sassy_setup_ssh         - Connect remote Linux (host/user/pass)
-   sassy_setup_check_tools - Scan for optional tools (nmap, adb, etc.)
+   sassy_setup_github      - Connect GitHub (opens browser)
+   sassy_setup_ssh         - Connect remote Linux
+   sassy_setup_check_tools - Verify all tools are detected
 
  TRANSPORT MODES:
 
- Local (stdio - Claude Desktop pipe):
-   Run: start-local.bat
-   Or:  sassymcp.exe
-   Config: Copy claude_desktop_config.template.json to
-           %APPDATA%\Claude\claude_desktop_config.json
-           Edit the path to match your install location.
+ Stdio (Claude Desktop):  start-beta.bat
+ HTTP (localhost):         start-beta.bat --http
+ HTTP (LAN):              start-beta.bat --http --host 0.0.0.0
+ HTTPS:                   start-beta.bat --http --ssl
 
- HTTP (localhost or LAN):
-   Run: start-lan.bat
-   Interactive: choose bind address, port, and auth token.
-   For LAN access, an auth token is required.
-
- Cloudflare Tunnel (remote access):
-   Requires: cloudflared installed and configured
-   Run: start-tunnel.bat
-   Interactive: sets up auth token and tunnel name.
-
- AUTH TOKENS:
-
- For HTTP/tunnel modes, set SASSYMCP_AUTH_TOKEN env var or
- use the sassy_setup_generate_token tool to create scoped
- tokens saved to ~/.sassymcp/tokens.json.
+ For LAN/tunnel access, set SASSYMCP_AUTH_TOKEN or use
+ sassy_setup_generate_token to create scoped tokens.
 
  ENVIRONMENT VARIABLES:
 
- SASSYMCP_LOAD_ALL=1          Load all tool modules
- SASSYMCP_GROUPS=core,github  Load specific groups only
- SASSYMCP_AUTH_TOKEN=xxx      Bearer token for HTTP auth
- SASSYMCP_DEV=1               Enable live reload (dev mode)
- GITHUB_TOKEN=xxx             GitHub API access
- SSH_HOST=xxx                 Remote Linux hostname/IP
- SSH_USER=xxx                 Remote Linux username
- SSH_PASS=xxx                 Remote Linux password
+ SASSYMCP_LOAD_ALL=1          Load all 257 tools (default in beta)
+ SASSYMCP_GROUPS=core,android  Load specific groups only
+ SASSYMCP_AUTH_TOKEN=xxx       Bearer token for HTTP auth
+ GITHUB_TOKEN=xxx              GitHub API access
+ SSH_HOST / SSH_USER / SSH_PASS  Remote Linux credentials
 
- OPTIONAL TOOLS (enhance capabilities):
+ KNOWN LIMITATIONS (beta):
 
- nmap        - Port scanning (sassy_port_scan)
- Tesseract   - OCR (sassy_screen_ocr, sassy_find_text_on_screen)
- adb         - Android device control (all sassy_adb_* tools)
- scrcpy      - Android screen mirroring (sassy_scrcpy_*)
- plink       - Remote Linux SSH (sassy_linux_exec)
- Chrome      - Web screenshots (sassy_url_screenshot)
+ - Windows only (10/11). No macOS/Linux build yet.
+ - Phone tools require USB debugging enabled on Android.
+ - Web screenshots require Chrome/Chromium installed.
+ - OCR accuracy depends on screen resolution and font size.
+ - First-run extraction may trigger antivirus (PyInstaller
+   single-file exe). Whitelist sassymcp.exe if needed.
 
- Run sassy_setup_check_tools to scan for all of these.
+ FEEDBACK:
 
- FILES:
+ Report bugs and request features on GitHub:
+   https://github.com/sassyconsultingllc/SassyMCP/issues
+
+ DATA FILES:
 
  ~/.sassymcp/persona.md       Your user profile
  ~/.sassymcp/config.json      Server configuration
  ~/.sassymcp/tokens.json      Auth tokens
  ~/.sassymcp/tool_usage.json  Tool analytics data
  ~/.sassymcp/audit.log        Audit trail
+ ~/.sassymcp/memory/          Persistent memory store
 ===========================================================
