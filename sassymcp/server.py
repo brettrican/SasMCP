@@ -478,16 +478,52 @@ def _load_modules():
 
 # ── Entry Point ────────────────────────────────────────────────────────
 
+def _is_piped() -> bool:
+    """Detect if stdin is connected to a pipe (MCP client) or a terminal (human)."""
+    try:
+        return not sys.stdin.isatty()
+    except Exception:
+        return False
+
+
+def _print_banner(tool_count, host, port, first_run):
+    """Print a human-readable startup banner with connection instructions."""
+    url = f"http://{host}:{port}"
+    print(flush=True)
+    print("  ==============================================================", flush=True)
+    print(f"   SassyMCP v1.1.0 Beta  |  {tool_count} tools  |  Ready", flush=True)
+    print("  ==============================================================", flush=True)
+    print(flush=True)
+    print(f"   MCP endpoint:  {url}/mcp/", flush=True)
+    print(flush=True)
+    print("   Connect from Claude Desktop (add to claude_desktop_config.json):", flush=True)
+    print(flush=True)
+    print('     {', flush=True)
+    print('       "mcpServers": {', flush=True)
+    print('         "sassymcp": {', flush=True)
+    print(f'           "url": "{url}/mcp/"', flush=True)
+    print('         }', flush=True)
+    print('       }', flush=True)
+    print('     }', flush=True)
+    print(flush=True)
+    if first_run:
+        print("   ** FIRST RUN: After connecting, ask Claude to run the", flush=True)
+        print("      setup wizard:  \"Run sassy_setup_wizard to set up my profile\"", flush=True)
+        print(flush=True)
+    print("  ==============================================================", flush=True)
+    print(flush=True)
+
+
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="SassyMCP Server v1.0")
+    parser = argparse.ArgumentParser(description="SassyMCP Server v1.1.0")
     parser.add_argument(
         "--http", "--serve", action="store_true",
-        help="Run as HTTP server (default — for cloudflared, Claude Desktop, etc.)",
+        help="Run as HTTP server (auto-detected when launched interactively)",
     )
     parser.add_argument("--stdio", action="store_true",
-                        help="Force stdio mode (not recommended)")
+                        help="Force stdio mode (for MCP clients that pipe stdin/stdout)")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=21001)
     parser.add_argument("--sse", action="store_true",
@@ -502,6 +538,14 @@ def main():
                         help="Path to SSL key file (default: ~/.sassymcp/server.key)")
     args = parser.parse_args()
 
+    # Auto-detect transport: if stdin is a pipe, an MCP client is calling us.
+    # If stdin is a terminal (human double-clicked or ran from cmd), use HTTP.
+    if not args.stdio and not args.http:
+        if _is_piped():
+            args.stdio = True
+        else:
+            args.http = True
+
     # Load everything
     _load_modules()
     _register_shutdown_handlers()
@@ -509,18 +553,18 @@ def main():
     # First-run detection
     from pathlib import Path as _P
     _persona = _P.home() / ".sassymcp" / "persona.md"
-    if args.setup or not _persona.exists():
+    first_run = not _persona.exists()
+    if args.setup or first_run:
         if args.setup:
             logger.info("--setup flag: setup wizard will be available for reconfiguration")
         else:
             logger.info("FIRST RUN DETECTED: no ~/.sassymcp/persona.md found")
-            logger.info("Call sassy_setup_wizard to complete initial setup")
 
     tool_count = len(mcp._tool_manager._tools) if hasattr(mcp, "_tool_manager") else "?"
-    logger.info(f"SassyMCP v1.0 started | {tool_count} tools | groups: {list(TOOL_GROUPS.keys())}")
+    logger.info(f"SassyMCP v1.1.0 started | {tool_count} tools | groups: {list(TOOL_GROUPS.keys())}")
 
     if args.stdio:
-        logger.info("Starting SassyMCP (stdio)")
+        logger.info("Starting SassyMCP (stdio — MCP client detected)")
         mcp.run()
     else:
         import uvicorn
@@ -546,6 +590,9 @@ def main():
             uvicorn_kwargs["ssl_certfile"] = ssl_cert
             uvicorn_kwargs["ssl_keyfile"] = ssl_key
             logger.info(f"SSL enabled: cert={ssl_cert}")
+
+        # Print human-readable banner with connection instructions
+        _print_banner(tool_count, args.host, args.port, first_run or args.setup)
 
         uvicorn.run(app, **uvicorn_kwargs)
 
