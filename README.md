@@ -239,7 +239,12 @@ SASSYMCP_GROUPS=core,github_quick,android,v020 uv run sassymcp
 
 ### Standalone Executable (recommended)
 
-**[Download sassymcp.exe →](https://sassyconsultingllc.com/downloads/sassymcp)** (sassyconsultingllc.com — gated download with the bundled tool pack and setup guide). No Python required.
+**[Get a license →](https://sassyconsultingllc.com/pricing.html)** — SassyMCP downloads are license-gated. After checkout you receive a `SASSY-...` key; paste it into the download URL:
+
+- `https://sassyconsultingllc.com/download/sassymcp/windows/sassymcp.exe?key=SASSY-...` (standalone exe, ~35 MB)
+- `https://sassyconsultingllc.com/download/sassymcp/windows/sassymcp-v1.1.3-bundle.zip?key=SASSY-...` (full bundle with `adb`, `nmap`, `plink`, `scrcpy`, `tesseract`, `cloudflared`, plus README and start-*.bat scripts, ~123 MB)
+
+No Python required.
 
 ### From Source
 
