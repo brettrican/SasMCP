@@ -124,21 +124,44 @@ All interaction tools (tap, swipe, type) automatically scan the UI tree before e
 
 ## Safe Delete (Delete Interception)
 
-AI agents can hallucinate destructive commands. SassyMCP intercepts **all** delete-family commands across every shell and moves targets to a `_DELETE_/` staging folder instead of destroying them.
+AI agents can hallucinate destructive commands. SassyMCP intercepts **all** delete-family commands across every shell and every tool entry point, then moves targets to a `_DELETE_/` staging folder instead of destroying them. Every interception is written to the audit log with the raw command, parsed targets, and move results.
 
-**Intercepted commands:** `rm`, `rmdir`, `unlink` (Unix/WSL), `del`, `erase`, `rd` (CMD), `Remove-Item` (PowerShell).
+**Coverage — every destructive path is gated:**
+
+| Tool | Guard |
+|------|-------|
+| `sassy_shell` | Intercepts delete commands, stages targets to `_DELETE_/` |
+| `sassy_session_send` / `sassy_session_start` | Same interceptor — persistent terminals can't bypass |
+| `sassy_linux_exec` | Refuses destructive commands on the remote host |
+| `sassy_safe_delete` | Explicit staging tool (`absolute()`, not `resolve()` — moves symlinks as symlinks) |
+| `sassy_write_file` (rewrite mode) | Snapshots existing file into `_DELETE_/` before overwriting |
+| `sassy_move` | Refuses silent destination overwrite |
+| `sassy_selfmod_edit` / `sassy_selfmod_write` | Bad-syntax writes rename to `<name>.bad.<ts>` (never unlink) |
+| `sassy_audit_clear` | Rotates the audit log instead of deleting it; requires `confirm='YES'` |
+
+**Intercepted command keywords:** `rm`, `rmdir`, `unlink` (Unix/WSL), `del`, `erase`, `rd` (CMD), `Remove-Item`, `ri`, `rni` (PowerShell aliases), `sdelete` / `sdelete64` (Sysinternals).
+
+**Also caught (beyond bare keywords):**
+- Shell wrappers — `powershell -c "del foo"`, `cmd /c del foo`, `bash -c "rm foo"`, `wsl -- rm foo` (payload is recursively scanned)
+- `.NET` calls — `[System.IO.File]::Delete(...)`, `[System.IO.Directory]::Delete(...)`
+- `Clear-Content`, `Set-Content -Value ''`
+- Truncate-by-redirect — `> file.txt`, `; > file.txt`
+- `Move-Item foo $null`
+
+**Protected roots** (refused by every guarded tool, not just the interceptor): the SassyMCP source tree itself, `~/.sassymcp/` (audit + config), and any `_DELETE_/` staging folder (no staging recursion).
 
 | Scenario | Result |
 |----------|--------|
-| `rm -rf /` | **Hard-blocked** — catastrophic pattern, no move attempted |
+| `rm -rf /` | **Hard-blocked** by the always-on blocklist — no move attempted |
 | `rm important.txt` | Blocked, file moved to `./_DELETE_/important.txt` |
 | `del /q *.log` | Blocked, all `.log` files moved to `./_DELETE_/` |
 | `Remove-Item -Path C:\data\old` | Blocked, `old` moved to `C:\data\_DELETE_\old` |
+| `cmd /c del foo` (wrapper) | Blocked — payload is unwrapped and intercepted |
+| `gci *.tmp \| ri` (PS alias) | Blocked — `ri` alias is matched |
+| `sassy_write_file("doc.txt", ..., "rewrite")` on existing file | Prior content snapshotted to `_DELETE_/doc.overwrite.<ts>.txt` first |
 | `ls -la` | Executes normally — not a delete command |
 
-The `sassy_safe_delete(path)` tool is also available for explicit use when the AI intends to remove something — it applies the same move-to-staging pattern.
-
-Name collisions in `_DELETE_/` are handled automatically with counter suffixes (`file.txt`, `file_1.txt`, `file_2.txt`).
+Name collisions in `_DELETE_/` are handled automatically with counter suffixes (`file.txt`, `file_1.txt`, `file_2.txt`). On Windows, paths with backslashes (`C:\Users\foo\bar`) are preserved correctly by the parser — no `shlex` mangling.
 
 ### Pause / Resume
 

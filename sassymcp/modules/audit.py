@@ -87,6 +87,34 @@ def _rotate_jsonl_if_needed():
         pass
 
 
+def log_intercept(tool_name: str, keyword: str, command: str, targets: list, results: list):
+    """Log a delete-interception event to audit.log + audit.jsonl.
+
+    Forensic record of every time the safe-delete interceptor fires.
+    Keeps the raw command, detected keyword, and what was moved/skipped.
+    """
+    try:
+        _LOG_DIR.mkdir(parents=True, exist_ok=True)
+        _rotate_if_needed()
+        entry = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "timestamp": time.time(),
+            "event": "intercept_delete",
+            "tool": tool_name,
+            "keyword": keyword,
+            "command": command[:500],
+            "targets": [str(t)[:300] for t in targets],
+            "results": [str(r)[:300] for r in results],
+        }
+        with _LOG_FILE.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+        _rotate_jsonl_if_needed()
+        with _JSONL_FILE.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except OSError:
+        pass
+
+
 def log_tool_call(tool_name: str, args: dict, elapsed_ms: int = 0, error: str = None):
     """Log a tool invocation. Called by the audit wrapper in server.py.
 
@@ -169,16 +197,31 @@ def register(server):
         return "\n".join(recent) if recent else f"No entries matching '{keyword}'"
 
     @server.tool()
-    async def sassy_audit_clear() -> str:
-        """Clear the audit log."""
+    async def sassy_audit_clear(confirm: str = "") -> str:
+        """Rotate the audit log to a timestamped archive.
+
+        The log is NEVER unlinked — always renamed to audit.cleared.<ts>.log
+        so forensic history is preserved. Pass confirm='YES' to proceed.
+        """
+        if confirm != "YES":
+            return (
+                "Refused: sassy_audit_clear requires confirm='YES' — "
+                "and rotates the log rather than deleting it. "
+                "Existing log is preserved as audit.cleared.<ts>.log"
+            )
         try:
+            stamp = time.strftime("%Y%m%dT%H%M%S")
+            archived = []
             if _LOG_FILE.exists():
-                _LOG_FILE.unlink()
-            # Also clear rotated files
-            for i in range(1, _MAX_ROTATIONS + 1):
-                rotated = _LOG_DIR / f"audit.log.{i}"
-                if rotated.exists():
-                    rotated.unlink()
-            return "Audit log cleared"
+                dst = _LOG_DIR / f"audit.cleared.{stamp}.log"
+                _LOG_FILE.rename(dst)
+                archived.append(str(dst))
+            if _JSONL_FILE.exists():
+                dst = _LOG_DIR / f"audit.cleared.{stamp}.jsonl"
+                _JSONL_FILE.rename(dst)
+                archived.append(str(dst))
+            # Record the rotation itself in the fresh log.
+            log_tool_call("sassy_audit_clear", {"archived": str(archived)}, 0)
+            return "Audit log rotated to:\n" + "\n".join(archived)
         except OSError as e:
-            return f"Error clearing audit log: {e}"
+            return f"Error rotating audit log: {e}"

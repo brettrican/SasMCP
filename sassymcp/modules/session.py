@@ -11,6 +11,9 @@ import logging
 import time
 from typing import Optional
 
+from sassymcp.modules._security import detect_delete_intent, validate_command
+from sassymcp.modules import audit as _audit
+
 logger = logging.getLogger("sassymcp.session")
 
 _sessions: dict[str, dict] = {}
@@ -87,6 +90,21 @@ def register(server):
         if name in _sessions and _sessions[name].is_alive():
             return json.dumps({"error": f"Session '{name}' already running. Stop it first or use a different name."})
 
+        # Validate initial command same as sassy_shell.
+        if command:
+            ok, err = validate_command(command)
+            if not ok:
+                return json.dumps({"error": err})
+            is_del, kw = detect_delete_intent(command)
+            if is_del:
+                _audit.log_intercept("sassy_session_start", kw, command, [], ["initial command blocked"])
+                return json.dumps({
+                    "error": (
+                        f"Initial command blocked by delete interceptor ('{kw}'). "
+                        "Use sassy_safe_delete(path) to stage deletions."
+                    )
+                })
+
         shell_map = {
             "powershell": ["powershell.exe", "-NoProfile", "-NoExit", "-Command", "-"],
             "cmd": ["cmd.exe", "/k"],
@@ -126,12 +144,32 @@ def register(server):
         """Send input to a running session.
 
         Like typing in a terminal. Newline is appended automatically.
+        Input is scanned by the delete interceptor — delete keywords are
+        refused here (use sassy_shell or sassy_safe_delete instead, where
+        targets are safely staged to _DELETE_/).
         """
         sess = _sessions.get(name)
         if not sess:
             return json.dumps({"error": f"No session '{name}'. Use sassy_session_list to see active sessions."})
         if not sess.is_alive():
             return json.dumps({"error": f"Session '{name}' has exited (code: {sess.proc.returncode})"})
+
+        # Gate the input same as a fresh shell invocation would be gated.
+        ok, err = validate_command(input_text)
+        if not ok:
+            _audit.log_intercept("sassy_session_send", "blocklist", input_text, [], [err or "blocked"])
+            return json.dumps({"error": err})
+        is_del, kw = detect_delete_intent(input_text)
+        if is_del:
+            _audit.log_intercept("sassy_session_send", kw, input_text, [], ["send blocked"])
+            return json.dumps({
+                "error": (
+                    f"Delete command blocked by interceptor ('{kw}'). "
+                    "sassy_session_send cannot bypass the _DELETE_ staging policy. "
+                    "Use sassy_shell (which stages targets) or sassy_safe_delete(path)."
+                ),
+                "session": name,
+            })
 
         try:
             await sess.send(input_text)

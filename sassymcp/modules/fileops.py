@@ -8,8 +8,10 @@ read_multiple_files for batch reads, and image rendering support.
 import json
 import shutil
 import re
+import time
 from pathlib import Path
-from sassymcp.modules._security import validate_path
+from sassymcp.modules._security import is_protected_path, validate_path
+from sassymcp.modules import audit as _audit
 
 
 def _check_path(path: str) -> str | None:
@@ -36,12 +38,23 @@ def register(server):
         err = _check_path(path)
         if err:
             return f"Error: {err}"
-        p = Path(path).resolve()
-        if not p.exists():
+        # absolute(), NOT resolve() — move the symlink itself, not its target.
+        p = Path(path).absolute()
+        if not p.exists() and not p.is_symlink():
             return f"Error: {path} does not exist"
 
+        # Refuse to touch the SassyMCP source tree, .sassymcp config dir,
+        # or anything named _DELETE_ (staging recursion).
+        prot, reason = is_protected_path(p)
+        if prot:
+            _audit.log_intercept("sassy_safe_delete", "protected", str(p), [str(p)], [reason or "protected"])
+            return f"Refused: {p} is protected ({reason})"
+
         staging = p.parent / _STAGING_FOLDER
-        staging.mkdir(exist_ok=True)
+        try:
+            staging.mkdir(exist_ok=True)
+        except OSError as e:
+            return f"Error creating staging folder {staging}: {e}"
         dest = staging / p.name
 
         # Handle name collisions
@@ -56,6 +69,7 @@ def register(server):
 
         try:
             shutil.move(str(p), str(dest))
+            _audit.log_intercept("sassy_safe_delete", "safe_delete", str(p), [str(p)], [f"moved to {dest}"])
             return f"Moved to staging: {p} -> {dest}"
         except (OSError, shutil.Error) as e:
             return f"Error moving to staging: {e}"
@@ -123,11 +137,48 @@ def register(server):
 
     @server.tool()
     async def sassy_write_file(path: str, content: str, mode: str = "rewrite") -> str:
-        """Write or append to a file. mode: rewrite | append"""
+        """Write or append to a file. mode: rewrite | append
+
+        Rewrite mode on an existing file first snapshots the prior contents
+        into the adjacent _DELETE_/ staging folder so destructive overwrites
+        can always be undone. Protected paths (SassyMCP source tree,
+        ~/.sassymcp) are refused.
+        """
         err = _check_path(path)
         if err:
             return f"Error: {err}"
-        p = Path(path)
+        p = Path(path).absolute()
+
+        if mode == "rewrite":
+            prot, reason = is_protected_path(p)
+            if prot:
+                _audit.log_intercept(
+                    "sassy_write_file", "protected_overwrite",
+                    f"rewrite {path}", [str(p)], [reason or "protected"],
+                )
+                return (
+                    f"Refused: rewrite of protected path blocked ({reason}). "
+                    "Use sassy_selfmod_edit for controlled edits inside the SassyMCP tree."
+                )
+            # Snapshot the existing file into _DELETE_ before overwriting.
+            if p.exists() and p.is_file():
+                try:
+                    staging = p.parent / _STAGING_FOLDER
+                    staging.mkdir(exist_ok=True)
+                    stamp = time.strftime("%Y%m%dT%H%M%S")
+                    snap = staging / f"{p.stem}.overwrite.{stamp}{p.suffix}"
+                    counter = 1
+                    while snap.exists():
+                        snap = staging / f"{p.stem}.overwrite.{stamp}_{counter}{p.suffix}"
+                        counter += 1
+                    shutil.copy2(str(p), str(snap))
+                    _audit.log_intercept(
+                        "sassy_write_file", "snapshot_before_overwrite",
+                        f"rewrite {path}", [str(p)], [f"snapshot -> {snap}"],
+                    )
+                except OSError as e:
+                    return f"Error snapshotting {p} before overwrite: {e}"
+
         p.parent.mkdir(parents=True, exist_ok=True)
         if mode == "append":
             with open(p, "a", encoding="utf-8") as f:
@@ -245,11 +296,35 @@ def register(server):
 
     @server.tool()
     async def sassy_move(source: str, destination: str) -> str:
-        """Move or rename a file/directory."""
+        """Move or rename a file/directory.
+
+        Blocks moves from/to protected paths and refuses to overwrite an
+        existing destination without an explicit sassy_safe_delete first.
+        """
         for p in (source, destination):
             err = _check_path(p)
             if err:
                 return f"Error: {err}"
+
+        src = Path(source).absolute()
+        dst = Path(destination).absolute()
+
+        prot_src, reason_src = is_protected_path(src)
+        if prot_src:
+            _audit.log_intercept("sassy_move", "protected_source", f"{source} -> {destination}", [str(src)], [reason_src or ""])
+            return f"Refused: source is protected ({reason_src})"
+        prot_dst, reason_dst = is_protected_path(dst)
+        if prot_dst:
+            _audit.log_intercept("sassy_move", "protected_destination", f"{source} -> {destination}", [str(dst)], [reason_dst or ""])
+            return f"Refused: destination is protected ({reason_dst})"
+
+        # Refuse silent overwrite — destination must not exist.
+        if dst.exists():
+            return (
+                f"Refused: destination {dst} already exists. "
+                "Use sassy_safe_delete to stage the destination first, then retry."
+            )
+
         try:
             shutil.move(source, destination)
             return f"Moved {source} -> {destination}"

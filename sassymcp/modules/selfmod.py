@@ -448,15 +448,26 @@ def register(server):
         # Syntax check
         ok, err = _syntax_check(resolved)
         if not ok:
-            # Revert
+            # Revert: if there was prior content, restore it. If this was a
+            # brand-new file, rename the bad write to <name>.bad.<ts> instead
+            # of unlinking — preserves forensic data and blocks weaponised
+            # "submit-bad-syntax-to-delete" attacks.
             if old_content is not None:
                 resolved.write_text(old_content, encoding="utf-8")
+                reverted_to = "previous_content"
             else:
-                resolved.unlink(missing_ok=True)
+                try:
+                    import time as _t
+                    bad_name = f"{resolved.name}.bad.{_t.strftime('%Y%m%dT%H%M%S')}"
+                    resolved.rename(resolved.with_name(bad_name))
+                    reverted_to = f"renamed_to:{bad_name}"
+                except OSError:
+                    reverted_to = "left_in_place"
             return json.dumps({
                 "error": "Syntax error — write reverted",
                 "syntax_error": err,
                 "backup": backup,
+                "reverted": reverted_to,
             })
 
         result = {

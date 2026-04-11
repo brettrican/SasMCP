@@ -9,7 +9,8 @@ import os
 import shutil
 from pathlib import Path
 
-from sassymcp.modules._security import validate_command
+from sassymcp.modules._security import detect_delete_intent, validate_command
+from sassymcp.modules import audit as _audit
 
 logger = logging.getLogger("sassymcp.linux")
 
@@ -106,6 +107,14 @@ def register(server):
         ok, err = validate_command(command)
         if not ok:
             return f"Error: {err}"
+        is_del, kw = detect_delete_intent(command)
+        if is_del:
+            _audit.log_intercept("sassy_linux_exec", kw, command, [], ["remote delete blocked"])
+            return (
+                f"Error: Delete command blocked by interceptor ('{kw}'). "
+                "sassy_linux_exec cannot run destructive file operations on the remote host. "
+                "SSH in manually if you need to remove files."
+            )
         timeout_seconds = min(max(timeout_seconds, 1), 300)
         output = []
         async for chunk in _ssh_exec_stream(command, timeout_seconds):

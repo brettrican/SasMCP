@@ -170,10 +170,88 @@ def validate_url(url: str, allow_private: bool = False) -> tuple[bool, Optional[
 # These are intercepted and targets are moved to a _DELETE_ staging folder
 # instead of being destroyed — minimising data loss from AI hallucinations.
 _DELETE_KEYWORDS = frozenset({
-    "rm", "rmdir", "unlink",          # Unix / WSL
-    "del", "erase", "rd",             # Windows CMD
-    "remove-item",                     # PowerShell
+    "rm", "rmdir", "unlink",                  # Unix / WSL
+    "del", "erase", "rd",                     # Windows CMD
+    "remove-item", "ri", "rni",               # PowerShell (incl. aliases)
+    "sdelete", "sdelete64",                   # Sysinternals secure-delete
 })
+
+# Shell wrappers whose payload must be recursively scanned.
+# Format: command-name -> flags that consume the next arg as a nested command.
+_WRAPPER_CMDS = {
+    "powershell":    {"-c", "-command", "-encodedcommand", "-enc"},
+    "powershell.exe":{"-c", "-command", "-encodedcommand", "-enc"},
+    "pwsh":          {"-c", "-command", "-encodedcommand", "-enc"},
+    "pwsh.exe":      {"-c", "-command", "-encodedcommand", "-enc"},
+    "cmd":           {"/c", "/k", "/r"},
+    "cmd.exe":       {"/c", "/k", "/r"},
+    "wsl":           {"-e", "--exec", "--"},
+    "wsl.exe":       {"-e", "--exec", "--"},
+    "bash":          {"-c"},
+    "sh":            {"-c"},
+    "zsh":           {"-c"},
+}
+
+# Destructive patterns that aren't bare keywords (regex, evaluated on lowered cmd).
+_DESTRUCTIVE_PATTERNS = [
+    (re.compile(r"\bclear-content\b"),                                  "clear-content"),
+    (re.compile(r"\bset-content\b[^|;&\n]*-value\s+['\"]?\s*['\"]?"),   "set-content -value ''"),
+    (re.compile(r"\[system\.io\.file\]::delete"),                       ".net file.delete"),
+    (re.compile(r"\[system\.io\.directory\]::delete"),                  ".net directory.delete"),
+    (re.compile(r"\[io\.file\]::delete"),                               ".net file.delete"),
+    (re.compile(r"\bout-null\s*;\s*.*>\s*\$null"),                      "redirect to $null"),
+    (re.compile(r"^\s*>\s*\S"),                                          "truncate-by-redirect"),
+    (re.compile(r"[;&|]\s*>\s*\S"),                                      "truncate-by-redirect"),
+    (re.compile(r"\bmove-item\b[^|;&\n]*\s+\$null"),                    "move-item to $null"),
+]
+
+
+def _scan_segment(seg: str) -> tuple[bool, str]:
+    """Scan a single command segment (already split on ; & | newlines)."""
+    stripped = seg.strip()
+    if not stripped:
+        return False, ""
+
+    # Destructive regex patterns — run first so they catch things keywords miss.
+    for pat, label in _DESTRUCTIVE_PATTERNS:
+        if pat.search(stripped):
+            return True, label
+
+    words = stripped.split()
+    if not words:
+        return False, ""
+
+    first = words[0].lstrip("&").lstrip(".")   # strip PS invocation prefixes
+    first = first.strip("'\"")                  # strip quoted invocations
+    first_lower = first.lower()
+
+    # Direct keyword match.
+    if first_lower in _DELETE_KEYWORDS:
+        return True, first_lower
+
+    # Shell wrapper — recursively scan the inner payload.
+    if first_lower in _WRAPPER_CMDS:
+        flags = _WRAPPER_CMDS[first_lower]
+        # Find the first non-flag token that isn't a wrapper-flag, OR the arg
+        # following a payload-bearing flag.
+        i = 1
+        while i < len(words):
+            tok = words[i].lower()
+            if tok in flags and i + 1 < len(words):
+                inner = " ".join(words[i + 1:])
+                # Strip matching outer quotes if present.
+                if len(inner) >= 2 and inner[0] == inner[-1] and inner[0] in ("'", '"'):
+                    inner = inner[1:-1]
+                return detect_delete_intent(inner)
+            if tok.startswith("-") or tok.startswith("/"):
+                i += 1
+                continue
+            # First positional token after a shell name — treat as command.
+            inner = " ".join(words[i:])
+            return detect_delete_intent(inner)
+        return False, ""
+
+    return False, ""
 
 
 def detect_delete_intent(command: str) -> tuple[bool, str]:
@@ -182,13 +260,63 @@ def detect_delete_intent(command: str) -> tuple[bool, str]:
     Returns (is_delete, matched_keyword).
     Delete commands are intercepted — targets are moved to a _DELETE_
     staging folder instead of being destroyed.
+
+    Handles: direct keywords, PowerShell aliases (ri/rni), shell wrappers
+    (powershell/cmd/wsl/bash -c), .NET File.Delete, Clear-Content,
+    truncate-by-redirect, and segmented commands joined by ; & | \\n.
     """
-    segments = re.split(r'[;&|\n]+', command.lower())
+    # Preserve case for regex patterns but lower for keyword comparisons.
+    segments = re.split(r'[;&|\n]+', command)
     for seg in segments:
-        words = seg.strip().split()
-        if words and words[0] in _DELETE_KEYWORDS:
-            return True, words[0]
+        is_del, kw = _scan_segment(seg.lower())
+        if is_del:
+            return True, kw
     return False, ""
+
+
+# ── Protected Paths — never delete/overwrite ────────────────────────
+
+def _protected_roots() -> list[Path]:
+    """Paths that no tool should delete, move, or overwrite."""
+    roots = []
+    try:
+        # The SassyMCP source tree itself.
+        roots.append(Path(__file__).resolve().parent.parent)  # sassymcp/
+    except Exception:
+        pass
+    # User config/audit.
+    roots.append(Path.home() / ".sassymcp")
+    return roots
+
+
+def is_protected_path(path: str | Path) -> tuple[bool, Optional[str]]:
+    """Check if a path is protected from deletion/overwrite.
+
+    Returns (is_protected, reason). Uses absolute path (NOT resolve) so
+    symlinks can be moved without following them into a protected target.
+    """
+    try:
+        p = Path(path).absolute()
+    except (OSError, ValueError):
+        return False, None
+
+    name = p.name
+    # The staging folder itself — never recurse into it.
+    if name == "_DELETE_":
+        return True, "path is a _DELETE_ staging folder"
+
+    for root in _protected_roots():
+        try:
+            root_abs = root.absolute()
+        except (OSError, ValueError):
+            continue
+        if p == root_abs or root_abs in p.parents:
+            # Allow operations on _DELETE_ subfolders inside protected roots.
+            if "_DELETE_" in p.parts:
+                return False, None
+            return True, f"path is inside protected root: {root_abs}"
+
+    return False, None
 
 
 # ── Input Size Validation ────────────────────────────────────────────
