@@ -1,5 +1,5 @@
 @echo off
-:: SassyMCP Beta — Full 257-tool build with bundled tools
+:: SassyMCP Beta - Full 257-tool build with bundled tools
 :: Just double-click this. The exe auto-detects HTTP mode and prints
 :: connection instructions.
 
