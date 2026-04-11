@@ -10,6 +10,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Any
 
+from sassymcp import __version__
+
 logger = logging.getLogger("sassymcp.observability")
 
 # psutil is optional but expected — degrade gracefully
@@ -40,7 +42,7 @@ class Observability:
             "tool_calls_total": self.tool_call_count,
             "error_rate": round(self.error_count / max(self.tool_call_count, 1) * 100, 2),
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "version": "1.0.0",
+            "version": __version__,
             "live_reload_enabled": os.environ.get("SASSYMCP_DEV") == "1",
         }
 

@@ -13,6 +13,8 @@ import sys
 import time
 from pathlib import Path
 
+from sassymcp import __version__
+
 logger = logging.getLogger("sassymcp.config")
 
 CONFIG_DIR = Path.home() / ".sassymcp"
@@ -149,7 +151,7 @@ def register(server):
             "config": _config,
             "systemInfo": _get_system_info(),
             "server": {
-                "version": "1.0.0",
+                "version": __version__,
                 "name": "sassymcp",
                 "transport": "http" if "--http" in sys.argv else "stdio",
                 "groups_env": groups_env or "(default)",

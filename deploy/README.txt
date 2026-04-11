@@ -1,5 +1,5 @@
 ===========================================================
- SassyMCP v1.1.0 Beta — Setup Guide
+ SassyMCP v1.1.3 — Setup Guide
  257 tools | 31 modules | All tools bundled
  Sassy Consulting LLC | sassyconsultingllc.com
 ===========================================================

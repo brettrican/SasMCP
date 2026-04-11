@@ -13,6 +13,8 @@ import logging
 import os
 from typing import Any, Optional
 
+from sassymcp import __version__
+
 logger = logging.getLogger("sassymcp.github")
 
 try:
@@ -45,7 +47,7 @@ class GitHubClient:
             "Authorization": f"token {token}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "SassyMCP/1.0.0",
+            "User-Agent": f"SassyMCP/{__version__}",
         }
         self._client: Optional[httpx.AsyncClient] = None
 

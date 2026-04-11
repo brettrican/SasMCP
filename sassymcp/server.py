@@ -28,6 +28,8 @@ import sys
 import time
 from pathlib import Path
 
+from sassymcp import __version__
+
 # Logging configured early — before any module can log
 logging.basicConfig(
     level=logging.INFO,
@@ -491,7 +493,7 @@ def _print_banner(tool_count, host, port, first_run):
     url = f"http://{host}:{port}"
     print(flush=True)
     print("  ==============================================================", flush=True)
-    print(f"   SassyMCP v1.1.0 Beta  |  {tool_count} tools  |  Ready", flush=True)
+    print(f"   SassyMCP v{__version__}  |  {tool_count} tools  |  Ready", flush=True)
     print("  ==============================================================", flush=True)
     print(flush=True)
     print(f"   MCP endpoint:  {url}/mcp/", flush=True)
@@ -517,7 +519,7 @@ def _print_banner(tool_count, host, port, first_run):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="SassyMCP Server v1.1.0")
+    parser = argparse.ArgumentParser(description=f"SassyMCP Server v{__version__}")
     parser.add_argument(
         "--http", "--serve", action="store_true",
         help="Run as HTTP server (auto-detected when launched interactively)",
@@ -561,7 +563,7 @@ def main():
             logger.info("FIRST RUN DETECTED: no ~/.sassymcp/persona.md found")
 
     tool_count = len(mcp._tool_manager._tools) if hasattr(mcp, "_tool_manager") else "?"
-    logger.info(f"SassyMCP v1.1.0 started | {tool_count} tools | groups: {list(TOOL_GROUPS.keys())}")
+    logger.info(f"SassyMCP v{__version__} started | {tool_count} tools | groups: {list(TOOL_GROUPS.keys())}")
 
     if args.stdio:
         logger.info("Starting SassyMCP (stdio — MCP client detected)")

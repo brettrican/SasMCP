@@ -1,6 +1,6 @@
 [project]
 name = "sassymcp"
-version = "1.0.0"
+dynamic = ["version"]
 description = "Unified MCP server for Windows desktop automation, Android device control, security auditing, web inspection, cross-session communication, GitHub operations, and AI workflow persona"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -39,6 +39,13 @@ line-length = 120
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+# Single source of truth — bump only sassymcp/__init__.py
+path = "sassymcp/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sassymcp"]
 
 [tool.uv]
 # python managed by .python-version file
