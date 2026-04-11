@@ -7,3 +7,29 @@ dist/
 .ruff_cache/
 .mypy_cache/
 start-http.bat
+
+# PyInstaller intermediate output (recreated on each build)
+build/
+
+# Local exe archives (immutable per-version backups, not tracked in git)
+deploy/archive/
+
+# Delete-interceptor staging folders (per directory, anywhere in tree)
+_DELETE_/
+
+# Red-phase / sandbox artifacts (root-level _test_*.py)
+/_test_*.py
+/_test_*.txt
+
+# Wrangler cache
+.wrangler/
+
+# Local Claude Code session state
+.claude/
+
+# Demo recording artifacts (one-off recording outputs, not source)
+demo*.gif
+demo*.png
+demo*.bat
+demo_frames/
+demo_output/
