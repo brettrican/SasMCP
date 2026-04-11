@@ -645,12 +645,23 @@ def register(server):
         }, indent=2)
 
     @server.tool()
-    async def sassy_selfmod_rollback(path: str) -> str:
+    async def sassy_selfmod_rollback(path: str, confirm: str = "") -> str:
         """Revert a file to its last git-committed state.
 
-        Discards ALL uncommitted changes to the file.
-        If the file was backed up by selfmod before editing, the backup commit is preserved.
+        Discards ALL uncommitted changes to the file — this is destructive
+        and irreversible. Requires confirm='YES' to proceed.
+        If the file was backed up by selfmod before editing, the backup
+        commit is preserved.
         """
+        if confirm != "YES":
+            return json.dumps({
+                "error": (
+                    "Refused: sassy_selfmod_rollback discards uncommitted changes "
+                    "and requires confirm='YES'. Review pending changes with "
+                    "sassy_selfmod_status before rolling back."
+                )
+            })
+
         try:
             resolved = _resolve_path(path)
         except ValueError as e:

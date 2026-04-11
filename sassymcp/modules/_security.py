@@ -179,10 +179,10 @@ _DELETE_KEYWORDS = frozenset({
 # Shell wrappers whose payload must be recursively scanned.
 # Format: command-name -> flags that consume the next arg as a nested command.
 _WRAPPER_CMDS = {
-    "powershell":    {"-c", "-command", "-encodedcommand", "-enc"},
-    "powershell.exe":{"-c", "-command", "-encodedcommand", "-enc"},
-    "pwsh":          {"-c", "-command", "-encodedcommand", "-enc"},
-    "pwsh.exe":      {"-c", "-command", "-encodedcommand", "-enc"},
+    "powershell":    {"-c", "-command", "-encodedcommand", "-enc", "-e"},
+    "powershell.exe":{"-c", "-command", "-encodedcommand", "-enc", "-e"},
+    "pwsh":          {"-c", "-command", "-encodedcommand", "-enc", "-e"},
+    "pwsh.exe":      {"-c", "-command", "-encodedcommand", "-enc", "-e"},
     "cmd":           {"/c", "/k", "/r"},
     "cmd.exe":       {"/c", "/k", "/r"},
     "wsl":           {"-e", "--exec", "--"},
@@ -192,54 +192,110 @@ _WRAPPER_CMDS = {
     "zsh":           {"-c"},
 }
 
-# Destructive patterns that aren't bare keywords (regex, evaluated on lowered cmd).
+# Flags that carry a base64-encoded PowerShell command payload.
+_ENCODED_FLAGS = {"-encodedcommand", "-enc", "-e"}
+
+# Destructive patterns that aren't bare keywords.
+# Evaluated against the lowered command segment after $var= prefix stripping.
 _DESTRUCTIVE_PATTERNS = [
-    (re.compile(r"\bclear-content\b"),                                  "clear-content"),
-    (re.compile(r"\bset-content\b[^|;&\n]*-value\s+['\"]?\s*['\"]?"),   "set-content -value ''"),
-    (re.compile(r"\[system\.io\.file\]::delete"),                       ".net file.delete"),
-    (re.compile(r"\[system\.io\.directory\]::delete"),                  ".net directory.delete"),
-    (re.compile(r"\[io\.file\]::delete"),                               ".net file.delete"),
-    (re.compile(r"\bout-null\s*;\s*.*>\s*\$null"),                      "redirect to $null"),
-    (re.compile(r"^\s*>\s*\S"),                                          "truncate-by-redirect"),
-    (re.compile(r"[;&|]\s*>\s*\S"),                                      "truncate-by-redirect"),
-    (re.compile(r"\bmove-item\b[^|;&\n]*\s+\$null"),                    "move-item to $null"),
+    (re.compile(r"\bclear-content\b"),                                                                    "clear-content"),
+    # Set-Content with a LITERAL empty string as its value is a wipe.
+    # Require an actual empty quoted string (not just "-value <anything>").
+    (re.compile(r"\bset-content\b[^|;&\n]*?-value\s+(?:''|\"\")(?:\s|$)"),                                "set-content empty"),
+    (re.compile(r"\[system\.io\.file\]::delete"),                                                         ".net file.delete"),
+    (re.compile(r"\[system\.io\.directory\]::delete"),                                                    ".net directory.delete"),
+    (re.compile(r"\[io\.file\]::delete"),                                                                 ".net file.delete"),
+    # Out-File -Force / -Overwrite replaces any existing file.
+    (re.compile(r"\bout-file\b[^|;&\n]*\s-force\b"),                                                      "out-file -force"),
+    (re.compile(r"\bout-file\b[^|;&\n]*\s-overwrite\b"),                                                  "out-file -overwrite"),
+    # New-Item -Force on an existing file replaces it.
+    (re.compile(r"\bnew-item\b[^|;&\n]*\s-force\b"),                                                      "new-item -force"),
+    # CMD copy/xcopy /y silently overwrite destination.
+    (re.compile(r"(?:^|[;&|])\s*copy\b[^|;&\n]*\s/y\b"),                                                  "copy /y"),
+    (re.compile(r"\bxcopy\b[^|;&\n]*\s/y\b"),                                                             "xcopy /y"),
+    # robocopy /MIR and /PURGE delete files in destination.
+    (re.compile(r"\brobocopy\b[^|;&\n]*\s/mir\b"),                                                        "robocopy /mir"),
+    (re.compile(r"\brobocopy\b[^|;&\n]*\s/purge\b"),                                                      "robocopy /purge"),
+    # Truncate-by-redirect: a single `>` that is NOT part of `>>` (append),
+    # `&>`/`2>` (stream redirect), etc., pointing at a filename.
+    (re.compile(r"(?<![>&0-9])>(?!>)\s*[^\s&|;<>]"),                                                      "truncate-by-redirect"),
+    (re.compile(r"\bmove-item\b[^|;&\n]*\s+\$null\b"),                                                    "move-item to $null"),
+    (re.compile(r"\bout-null\b[^|;&\n]*>\s*\$null"),                                                      "redirect to $null"),
 ]
 
+# Assignment prefixes in PowerShell that would otherwise make the wrapped
+# delete keyword invisible to first-word matching.
+_PS_ASSIGNMENT_PREFIX = re.compile(r"^\$\w+\s*=\s*")
 
-def _scan_segment(seg: str) -> tuple[bool, str]:
-    """Scan a single command segment (already split on ; & | newlines)."""
-    stripped = seg.strip()
-    if not stripped:
+
+def _decode_powershell_base64(payload: str) -> Optional[str]:
+    """Best-effort decode of a PowerShell -EncodedCommand argument.
+
+    PowerShell encodes with UTF-16-LE then base64. Returns decoded text
+    or None if the payload isn't decodable.
+    """
+    try:
+        import base64
+        cleaned = payload.strip().strip("'\"")
+        # Pad to multiple of 4 for base64.
+        cleaned += "=" * (-len(cleaned) % 4)
+        raw = base64.b64decode(cleaned, validate=False)
+        return raw.decode("utf-16-le", errors="strict")
+    except Exception:
+        return None
+
+
+def _scan_segment(seg_lower: str, seg_orig: str) -> tuple[bool, str]:
+    """Scan a single command segment (already split on ; & | newlines).
+
+    Takes BOTH the lowered segment (for keyword/pattern matching) and the
+    original-case segment (for base64 payloads that must not be lowercased).
+    """
+    stripped_lower = seg_lower.strip()
+    stripped_orig = seg_orig.strip()
+    if not stripped_lower:
         return False, ""
+
+    # Strip PowerShell assignment prefix ("$null = ri foo" -> "ri foo").
+    stripped_lower = _PS_ASSIGNMENT_PREFIX.sub("", stripped_lower)
+    stripped_orig = _PS_ASSIGNMENT_PREFIX.sub("", stripped_orig)
 
     # Destructive regex patterns — run first so they catch things keywords miss.
     for pat, label in _DESTRUCTIVE_PATTERNS:
-        if pat.search(stripped):
+        if pat.search(stripped_lower):
             return True, label
 
-    words = stripped.split()
-    if not words:
+    words_lower = stripped_lower.split()
+    words_orig = stripped_orig.split()
+    if not words_lower:
         return False, ""
 
-    first = words[0].lstrip("&").lstrip(".")   # strip PS invocation prefixes
-    first = first.strip("'\"")                  # strip quoted invocations
-    first_lower = first.lower()
+    first = words_lower[0].lstrip("&").lstrip(".")
+    first = first.strip("'\"")
 
     # Direct keyword match.
-    if first_lower in _DELETE_KEYWORDS:
-        return True, first_lower
+    if first in _DELETE_KEYWORDS:
+        return True, first
 
     # Shell wrapper — recursively scan the inner payload.
-    if first_lower in _WRAPPER_CMDS:
-        flags = _WRAPPER_CMDS[first_lower]
-        # Find the first non-flag token that isn't a wrapper-flag, OR the arg
-        # following a payload-bearing flag.
+    if first in _WRAPPER_CMDS:
+        flags = _WRAPPER_CMDS[first]
         i = 1
-        while i < len(words):
-            tok = words[i].lower()
-            if tok in flags and i + 1 < len(words):
-                inner = " ".join(words[i + 1:])
-                # Strip matching outer quotes if present.
+        while i < len(words_lower):
+            tok = words_lower[i]
+            if tok in flags and i + 1 < len(words_lower):
+                # Base64-encoded PowerShell payload — decode the ORIGINAL-case
+                # token (base64 is case-sensitive).
+                if tok in _ENCODED_FLAGS:
+                    payload = words_orig[i + 1] if i + 1 < len(words_orig) else words_lower[i + 1]
+                    decoded = _decode_powershell_base64(payload)
+                    if decoded:
+                        is_del, kw = detect_delete_intent(decoded)
+                        if is_del:
+                            return True, f"encodedcommand:{kw}"
+                    i += 2
+                    continue
+                inner = " ".join(words_lower[i + 1:])
                 if len(inner) >= 2 and inner[0] == inner[-1] and inner[0] in ("'", '"'):
                     inner = inner[1:-1]
                 return detect_delete_intent(inner)
@@ -247,7 +303,7 @@ def _scan_segment(seg: str) -> tuple[bool, str]:
                 i += 1
                 continue
             # First positional token after a shell name — treat as command.
-            inner = " ".join(words[i:])
+            inner = " ".join(words_lower[i:])
             return detect_delete_intent(inner)
         return False, ""
 
@@ -265,10 +321,11 @@ def detect_delete_intent(command: str) -> tuple[bool, str]:
     (powershell/cmd/wsl/bash -c), .NET File.Delete, Clear-Content,
     truncate-by-redirect, and segmented commands joined by ; & | \\n.
     """
-    # Preserve case for regex patterns but lower for keyword comparisons.
-    segments = re.split(r'[;&|\n]+', command)
-    for seg in segments:
-        is_del, kw = _scan_segment(seg.lower())
+    # Split on the original-case command so we can pass both forms to
+    # _scan_segment (base64 payloads must not be lowercased).
+    segments_orig = re.split(r'[;&|\n]+', command)
+    for seg_orig in segments_orig:
+        is_del, kw = _scan_segment(seg_orig.lower(), seg_orig)
         if is_del:
             return True, kw
     return False, ""
@@ -292,29 +349,52 @@ def _protected_roots() -> list[Path]:
 def is_protected_path(path: str | Path) -> tuple[bool, Optional[str]]:
     """Check if a path is protected from deletion/overwrite.
 
-    Returns (is_protected, reason). Uses absolute path (NOT resolve) so
-    symlinks can be moved without following them into a protected target.
+    Uses resolve() for the check so that:
+      - .. traversal is collapsed ("V:/Projects/SassyMCP/_DELETE_/../sassymcp/.." → caught)
+      - Windows 8.3 short names are expanded ("V:/PROJEC~1/.." → caught)
+      - Symlinks are followed so that a symlink pointing INTO a protected
+        tree is correctly refused
+
+    Note: the MOVE logic in shell.py / fileops.py still uses absolute()
+    (not resolve()) so that symlinks are MOVED as symlinks. This check is
+    about "what does this target on the real filesystem" — the move is
+    about "what literal entry is this."
     """
     try:
-        p = Path(path).absolute()
+        p_abs = Path(path).absolute()
     except (OSError, ValueError):
         return False, None
 
-    name = p.name
+    # Try to resolve (collapse .., expand 8.3 names, follow symlinks).
+    # strict=False returns the best-effort resolved path even if the
+    # terminal component does not exist.
+    try:
+        p = p_abs.resolve(strict=False)
+    except (OSError, ValueError):
+        p = p_abs
+
     # The staging folder itself — never recurse into it.
-    if name == "_DELETE_":
+    if p.name == "_DELETE_":
         return True, "path is a _DELETE_ staging folder"
 
     for root in _protected_roots():
         try:
-            root_abs = root.absolute()
+            root_resolved = root.resolve(strict=False)
         except (OSError, ValueError):
-            continue
-        if p == root_abs or root_abs in p.parents:
-            # Allow operations on _DELETE_ subfolders inside protected roots.
+            try:
+                root_resolved = root.absolute()
+            except (OSError, ValueError):
+                continue
+        if p == root_resolved or root_resolved in p.parents:
+            # Exemption for paths inside a staging folder THAT LIVES INSIDE
+            # the protected root. Example: sassymcp/modules/_DELETE_/old.py
+            # is ok to touch — it's already staged.
+            # We check this on the RESOLVED path, so "_DELETE_/.." traversal
+            # no longer bypasses protection (parts after resolve() won't
+            # contain _DELETE_ if it was escaped).
             if "_DELETE_" in p.parts:
                 return False, None
-            return True, f"path is inside protected root: {root_abs}"
+            return True, f"path is inside protected root: {root_resolved}"
 
     return False, None
 

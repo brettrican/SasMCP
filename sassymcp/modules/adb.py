@@ -12,7 +12,13 @@ import ipaddress
 import shutil
 import os
 
-from sassymcp.modules._security import validate_adb_device, validate_adb_package, validate_command
+from sassymcp.modules._security import (
+    detect_delete_intent,
+    validate_adb_device,
+    validate_adb_package,
+    validate_command,
+)
+from sassymcp.modules import audit as _audit
 
 
 def _adb_path() -> str:
@@ -60,11 +66,24 @@ def register(server):
         return await _run_adb("devices", "-l")
 
     @server.tool()
-    async def sassy_adb_shell(command: str, device: str = "") -> str:
-        """Run shell command on Android device."""
+    async def sassy_adb_shell(command: str, device: str = "", allow_destructive: bool = False) -> str:
+        """Run shell command on Android device.
+
+        Destructive commands (rm, rmdir, etc.) are blocked by default.
+        Set allow_destructive=True to override — required for legitimate
+        cleanup workflows like `pm clear <pkg>` or clearing /data/local/tmp.
+        """
         ok, err = validate_command(command)
         if not ok:
             return f"Error: {err}"
+        if not allow_destructive:
+            is_del, kw = detect_delete_intent(command)
+            if is_del:
+                _audit.log_intercept("sassy_adb_shell", kw, command, [], ["remote delete blocked"])
+                return (
+                    f"Error: Destructive command blocked on device ('{kw}'). "
+                    "Pass allow_destructive=True to override if this is intentional."
+                )
         try:
             args = _device_args(device)
         except ValueError as e:

@@ -333,17 +333,40 @@ def register(server):
 
     @server.tool()
     async def sassy_copy(source: str, destination: str) -> str:
-        """Copy a file or directory tree."""
+        """Copy a file or directory tree.
+
+        Refuses protected src/dst and refuses to silently overwrite an
+        existing destination (use sassy_safe_delete on the destination
+        first if you really need to replace it).
+        """
         for p in (source, destination):
             err = _check_path(p)
             if err:
                 return f"Error: {err}"
+
+        src = Path(source).absolute()
+        dst = Path(destination).absolute()
+
+        prot_src, reason_src = is_protected_path(src)
+        if prot_src:
+            _audit.log_intercept("sassy_copy", "protected_source", f"{source} -> {destination}", [str(src)], [reason_src or ""])
+            return f"Refused: source is protected ({reason_src})"
+        prot_dst, reason_dst = is_protected_path(dst)
+        if prot_dst:
+            _audit.log_intercept("sassy_copy", "protected_destination", f"{source} -> {destination}", [str(dst)], [reason_dst or ""])
+            return f"Refused: destination is protected ({reason_dst})"
+
+        if dst.exists():
+            return (
+                f"Refused: destination {dst} already exists. "
+                "Use sassy_safe_delete to stage the destination first, then retry."
+            )
+
         try:
-            src = Path(source)
             if src.is_dir():
                 shutil.copytree(source, destination)
             else:
-                Path(destination).parent.mkdir(parents=True, exist_ok=True)
+                dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, destination)
             return f"Copied {source} -> {destination}"
         except (OSError, shutil.Error) as e:

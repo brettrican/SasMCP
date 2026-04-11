@@ -133,22 +133,31 @@ AI agents can hallucinate destructive commands. SassyMCP intercepts **all** dele
 | `sassy_shell` | Intercepts delete commands, stages targets to `_DELETE_/` |
 | `sassy_session_send` / `sassy_session_start` | Same interceptor — persistent terminals can't bypass |
 | `sassy_linux_exec` | Refuses destructive commands on the remote host |
-| `sassy_safe_delete` | Explicit staging tool (`absolute()`, not `resolve()` — moves symlinks as symlinks) |
+| `sassy_adb_shell` | Refuses destructive commands on Android device (override with `allow_destructive=True`) |
+| `sassy_safe_delete` | Explicit staging tool — moves symlinks as symlinks (no `resolve()` in the move path) |
 | `sassy_write_file` (rewrite mode) | Snapshots existing file into `_DELETE_/` before overwriting |
-| `sassy_move` | Refuses silent destination overwrite |
+| `sassy_edit_block` / `sassy_edit_multi` | Refuses protected paths, snapshots existing content to `_DELETE_/<name>.pre-edit.<ts><ext>` before applying |
+| `sassy_copy` | Refuses existing destination (no silent overwrite), refuses protected src/dst |
+| `sassy_move` | Refuses silent destination overwrite, refuses protected src/dst |
 | `sassy_selfmod_edit` / `sassy_selfmod_write` | Bad-syntax writes rename to `<name>.bad.<ts>` (never unlink) |
+| `sassy_selfmod_rollback` | Requires `confirm='YES'` — discards uncommitted changes |
 | `sassy_audit_clear` | Rotates the audit log instead of deleting it; requires `confirm='YES'` |
 
 **Intercepted command keywords:** `rm`, `rmdir`, `unlink` (Unix/WSL), `del`, `erase`, `rd` (CMD), `Remove-Item`, `ri`, `rni` (PowerShell aliases), `sdelete` / `sdelete64` (Sysinternals).
 
 **Also caught (beyond bare keywords):**
 - Shell wrappers — `powershell -c "del foo"`, `cmd /c del foo`, `bash -c "rm foo"`, `wsl -- rm foo` (payload is recursively scanned)
+- Base64 payloads — `powershell -EncodedCommand <base64>` is decoded (UTF-16-LE) and recursively scanned
 - `.NET` calls — `[System.IO.File]::Delete(...)`, `[System.IO.Directory]::Delete(...)`
-- `Clear-Content`, `Set-Content -Value ''`
-- Truncate-by-redirect — `> file.txt`, `; > file.txt`
+- `Clear-Content`, `Set-Content -Value ''` (literal empty only — normal `-Value "foo"` is allowed)
+- `Out-File -Force`, `New-Item -Force` (overwrite-style)
+- `copy /y`, `xcopy /y` — CMD silent-overwrite flags
+- **`robocopy /MIR` and `robocopy /PURGE`** — mirror/purge modes delete destination files
+- Truncate-by-redirect — `> file.txt`, `type foo > bar.txt`, `cmd; > file.txt` (append `>>` and stream `2>` / `&>` correctly ignored)
 - `Move-Item foo $null`
+- Assignment prefixes — `$null = ri foo` is correctly unwrapped
 
-**Protected roots** (refused by every guarded tool, not just the interceptor): the SassyMCP source tree itself, `~/.sassymcp/` (audit + config), and any `_DELETE_/` staging folder (no staging recursion).
+**Protected roots** (refused by every guarded tool, not just the interceptor): the SassyMCP source tree itself, `~/.sassymcp/` (audit + config), and any `_DELETE_/` staging folder (no staging recursion). Protection uses `resolve()` so path traversal (`..\`), symlinks, and Windows 8.3 short names all normalize correctly before the check.
 
 | Scenario | Result |
 |----------|--------|

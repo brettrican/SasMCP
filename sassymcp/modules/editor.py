@@ -3,10 +3,67 @@
 Provides edit_block functionality: find exact text in a file and replace it
 without rewriting the entire file. Includes fuzzy matching fallback with
 character-level diff reporting when exact match fails.
+
+v1.1.2: refuses edits on protected paths (SassyMCP source, ~/.sassymcp) and
+snapshots existing content to _DELETE_/<name>.pre-edit.<ts><ext> before
+applying so destructive edits can always be undone.
 """
 
 import difflib
+import shutil
+import time
 from pathlib import Path
+
+from sassymcp.modules._security import is_protected_path
+from sassymcp.modules import audit as _audit
+
+_STAGING_FOLDER = "_DELETE_"
+
+
+def _snapshot_before_edit(p: Path) -> tuple[bool, str]:
+    """Copy p into its adjacent _DELETE_/ as <stem>.pre-edit.<ts><suffix>.
+
+    Returns (ok, path_or_error). Failure is returned so the caller can
+    refuse the edit rather than proceed without a rollback point.
+    """
+    try:
+        staging = p.parent / _STAGING_FOLDER
+        staging.mkdir(exist_ok=True)
+        stamp = time.strftime("%Y%m%dT%H%M%S")
+        snap = staging / f"{p.stem}.pre-edit.{stamp}{p.suffix}"
+        counter = 1
+        while snap.exists():
+            snap = staging / f"{p.stem}.pre-edit.{stamp}_{counter}{p.suffix}"
+            counter += 1
+        shutil.copy2(str(p), str(snap))
+        return True, str(snap)
+    except OSError as e:
+        return False, f"snapshot failed: {e}"
+
+
+def _guard_edit(path_str: str, tool_name: str) -> tuple[bool, str, Path | None]:
+    """Protection + snapshot gate for edit tools.
+
+    Returns (ok, error_or_snapshot_path, resolved_path).
+    If ok is False, the caller must return error_or_snapshot_path.
+    """
+    p = Path(path_str).absolute()
+    if not p.exists():
+        return False, f"Error: {path_str} does not exist", None
+    if not p.is_file():
+        return False, f"Error: {path_str} is not a file", None
+
+    prot, reason = is_protected_path(p)
+    if prot:
+        _audit.log_intercept(tool_name, "protected_edit", path_str, [str(p)], [reason or ""])
+        return False, f"Refused: edit of protected path blocked ({reason}). Use sassy_selfmod_edit for controlled edits inside the SassyMCP tree.", None
+
+    ok, snap = _snapshot_before_edit(p)
+    if not ok:
+        return False, f"Refused: {snap}", None
+
+    _audit.log_intercept(tool_name, "snapshot_before_edit", path_str, [str(p)], [f"snapshot -> {snap}"])
+    return True, snap, p
 
 
 def _find_best_match(content: str, search_text: str, threshold: float = 0.8):
@@ -75,12 +132,12 @@ def register(server):
         - Fails if multiple exact matches found (provide more context)
         - Preserves file encoding and line endings
         - Returns a preview of the change with surrounding context
+        - Refuses edits on protected paths
+        - Snapshots existing content to _DELETE_/ before applying
         """
-        p = Path(path)
-        if not p.exists():
-            return f"Error: {path} does not exist"
-        if not p.is_file():
-            return f"Error: {path} is not a file"
+        ok, msg, p = _guard_edit(path, "sassy_edit_block")
+        if not ok:
+            return msg
 
         try:
             content = p.read_text(encoding="utf-8", errors="replace")
@@ -149,12 +206,14 @@ def register(server):
         [{"old": "text to find", "new": "replacement"}, ...]
 
         Edits are applied in order. Each must have exactly one match.
+        Refuses edits on protected paths and snapshots existing content
+        to _DELETE_/ before applying.
         """
         import json as _json
 
-        p = Path(path)
-        if not p.exists():
-            return f"Error: {path} does not exist"
+        ok, msg, p = _guard_edit(path, "sassy_edit_multi")
+        if not ok:
+            return msg
 
         try:
             edit_list = _json.loads(edits)
