@@ -239,7 +239,9 @@ SASSYMCP_GROUPS=core,github_quick,android,v020 uv run sassymcp
 
 ### Standalone Executable (recommended)
 
-Download `sassymcp.exe` from the [latest release](https://github.com/sassyconsultingllc/SassyMCP/releases). No Python required.
+**[Download sassymcp.exe →](https://sassyconsultingllc.com/downloads/sassymcp)** (sassyconsultingllc.com — gated download with the bundled tool pack and setup guide). No Python required.
+
+Open mirror: [GitHub Releases](https://github.com/sassyconsultingllc/SassyMCP/releases) — same `sassymcp.exe` attached to each tagged release, no gate.
 
 ### From Source
 
