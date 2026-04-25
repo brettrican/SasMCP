@@ -73,6 +73,11 @@ dist/SassyMCP-v*/
 /_*.log
 /_backups/
 
+# WiX / MSI build artifacts (release outputs, not source)
+/SassyMCP-v*.msi
+/SassyMCP-v*.wixpdb
+/cab*.cab
+
 # Cloudflare Workers / Wrangler local state
 sassymcp-oauth/node_modules/
 sassymcp-oauth/.cache/

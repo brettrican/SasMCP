@@ -261,6 +261,13 @@ TOOL_GROUPS = {
         "max_concurrent": 10,
         "calls_per_minute": 120,
     },
+    "updater": {
+        "modules": ["updater"],
+        "description": "Kali-style version checks and self-update (check, list, changelog, apply)",
+        "always_load": True,
+        "max_concurrent": 2,
+        "calls_per_minute": 12,
+    },
 }
 
 

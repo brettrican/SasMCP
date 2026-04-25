@@ -1,281 +1,278 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="SassyMCP" Language="1033" Version="1.2.0" Manufacturer="SassyMCP Contributors" UpgradeCode="b5db2d17-41bf-4b2b-9ba5-70f5c1d933d4">
-    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="SassyMCP" Language="1033" Version="1.2.0" Manufacturer="SassyMCP Contributors" UpgradeCode="b5db2d17-41bf-4b2b-9ba5-70f5c1d933d4">
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     <MajorUpgrade DowngradeErrorMessage="A newer version of SassyMCP is already installed." />
-    <MediaTemplate />
+
     <Feature Id="ProductFeature" Title="SassyMCP" Level="1">
       <ComponentGroupRef Id="AppFiles" />
     </Feature>
-  </Product>
+  </Package>
   <Fragment>
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFilesFolder">
+      <StandardDirectory Id="ProgramFilesFolder">
         <Directory Id="INSTALLFOLDER" Name="SassyMCP" />
-      </Directory>
-    </Directory>
-  </Fragment>
+      </StandardDirectory>
+    </Fragment>
   <Fragment>
-    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">      <Component Id='cmp_501674b9_bd77_4def_bc67_62859fcc28cd' Guid='{501674b9-bd77-4def-bc67-62859fcc28cd}'>
-        <File Id='fil_501674b9_bd77_4def_bc67_62859fcc28cd' Source='V:\projects\sassymcp\dist\Most recent extract\claude_desktop_config.template.json' KeyPath='yes' />
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">      <Component Id="cmp_501674b9_bd77_4def_bc67_62859fcc28cd" Guid="{501674b9-bd77-4def-bc67-62859fcc28cd}">
+        <File Id="fil_501674b9_bd77_4def_bc67_62859fcc28cd" Source="V:\projects\sassymcp\dist\Most recent extract\claude_desktop_config.template.json" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_19cffff9_3faa_4106_b424_8228e80cb521' Guid='{19cffff9-3faa-4106-b424-8228e80cb521}'>
-        <File Id='fil_19cffff9_3faa_4106_b424_8228e80cb521' Source='V:\projects\sassymcp\dist\Most recent extract\grok_desktop_config.template.json' KeyPath='yes' />
+      <Component Id="cmp_19cffff9_3faa_4106_b424_8228e80cb521" Guid="{19cffff9-3faa-4106-b424-8228e80cb521}">
+        <File Id="fil_19cffff9_3faa_4106_b424_8228e80cb521" Source="V:\projects\sassymcp\dist\Most recent extract\grok_desktop_config.template.json" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_790091c7_f6b0_4a35_a144_7bb3d11a61f7' Guid='{790091c7-f6b0-4a35-a144-7bb3d11a61f7}'>
-        <File Id='fil_790091c7_f6b0_4a35_a144_7bb3d11a61f7' Source='V:\projects\sassymcp\dist\Most recent extract\README.txt' KeyPath='yes' />
+      <Component Id="cmp_790091c7_f6b0_4a35_a144_7bb3d11a61f7" Guid="{790091c7-f6b0-4a35-a144-7bb3d11a61f7}">
+        <File Id="fil_790091c7_f6b0_4a35_a144_7bb3d11a61f7" Source="V:\projects\sassymcp\dist\Most recent extract\README.txt" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_3f04aef6_2e66_4399_abb7_3a618111f014' Guid='{3f04aef6-2e66-4399-abb7-3a618111f014}'>
-        <File Id='fil_3f04aef6_2e66_4399_abb7_3a618111f014' Source='V:\projects\sassymcp\dist\Most recent extract\sassymcp.exe' KeyPath='yes' />
+      <Component Id="cmp_3f04aef6_2e66_4399_abb7_3a618111f014" Guid="{3f04aef6-2e66-4399-abb7-3a618111f014}">
+        <File Id="fil_3f04aef6_2e66_4399_abb7_3a618111f014" Source="V:\projects\sassymcp\dist\Most recent extract\sassymcp.exe" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_85b6ba94_bf97_4ff7_8a78_a9e32fb4f75b' Guid='{85b6ba94-bf97-4ff7-8a78-a9e32fb4f75b}'>
-        <File Id='fil_85b6ba94_bf97_4ff7_8a78_a9e32fb4f75b' Source='V:\projects\sassymcp\dist\Most recent extract\start-beta.bat' KeyPath='yes' />
+      <Component Id="cmp_85b6ba94_bf97_4ff7_8a78_a9e32fb4f75b" Guid="{85b6ba94-bf97-4ff7-8a78-a9e32fb4f75b}">
+        <File Id="fil_85b6ba94_bf97_4ff7_8a78_a9e32fb4f75b" Source="V:\projects\sassymcp\dist\Most recent extract\start-beta.bat" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_d3d469f9_34c4_4715_83cb_d45ccdd6a696' Guid='{d3d469f9-34c4-4715-83cb-d45ccdd6a696}'>
-        <File Id='fil_d3d469f9_34c4_4715_83cb_d45ccdd6a696' Source='V:\projects\sassymcp\dist\Most recent extract\start-lan.bat' KeyPath='yes' />
+      <Component Id="cmp_d3d469f9_34c4_4715_83cb_d45ccdd6a696" Guid="{d3d469f9-34c4-4715-83cb-d45ccdd6a696}">
+        <File Id="fil_d3d469f9_34c4_4715_83cb_d45ccdd6a696" Source="V:\projects\sassymcp\dist\Most recent extract\start-lan.bat" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_cb8da294_050e_4efd_8e94_9f24858159c5' Guid='{cb8da294-050e-4efd-8e94-9f24858159c5}'>
-        <File Id='fil_cb8da294_050e_4efd_8e94_9f24858159c5' Source='V:\projects\sassymcp\dist\Most recent extract\start-local.bat' KeyPath='yes' />
+      <Component Id="cmp_cb8da294_050e_4efd_8e94_9f24858159c5" Guid="{cb8da294-050e-4efd-8e94-9f24858159c5}">
+        <File Id="fil_cb8da294_050e_4efd_8e94_9f24858159c5" Source="V:\projects\sassymcp\dist\Most recent extract\start-local.bat" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_855e0d0a_ade5_4dfe_a788_788196ae0f09' Guid='{855e0d0a-ade5-4dfe-a788-788196ae0f09}'>
-        <File Id='fil_855e0d0a_ade5_4dfe_a788_788196ae0f09' Source='V:\projects\sassymcp\dist\Most recent extract\start-tunnel.bat' KeyPath='yes' />
+      <Component Id="cmp_855e0d0a_ade5_4dfe_a788_788196ae0f09" Guid="{855e0d0a-ade5-4dfe-a788-788196ae0f09}">
+        <File Id="fil_855e0d0a_ade5_4dfe_a788_788196ae0f09" Source="V:\projects\sassymcp\dist\Most recent extract\start-tunnel.bat" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_e5e5bf05_73cb_4e52_bb78_097f07b44684' Guid='{e5e5bf05-73cb-4e52-bb78-097f07b44684}'>
-        <File Id='fil_e5e5bf05_73cb_4e52_bb78_097f07b44684' Source='V:\projects\sassymcp\dist\Most recent extract\tools\adb\adb.exe' KeyPath='yes' />
+      <Component Id="cmp_e5e5bf05_73cb_4e52_bb78_097f07b44684" Guid="{e5e5bf05-73cb-4e52-bb78-097f07b44684}">
+        <File Id="fil_e5e5bf05_73cb_4e52_bb78_097f07b44684" Source="V:\projects\sassymcp\dist\Most recent extract\tools\adb\adb.exe" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_bb6b41fb_dc1d_4d37_a9bd_ee691b70f952' Guid='{bb6b41fb-dc1d-4d37-a9bd-ee691b70f952}'>
-        <File Id='fil_bb6b41fb_dc1d_4d37_a9bd_ee691b70f952' Source='V:\projects\sassymcp\dist\Most recent extract\tools\adb\AdbWinApi.dll' KeyPath='yes' />
+      <Component Id="cmp_bb6b41fb_dc1d_4d37_a9bd_ee691b70f952" Guid="{bb6b41fb-dc1d-4d37-a9bd-ee691b70f952}">
+        <File Id="fil_bb6b41fb_dc1d_4d37_a9bd_ee691b70f952" Source="V:\projects\sassymcp\dist\Most recent extract\tools\adb\AdbWinApi.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_6d9e00bd_867c_4834_9cb3_03b507fd58df' Guid='{6d9e00bd-867c-4834-9cb3-03b507fd58df}'>
-        <File Id='fil_6d9e00bd_867c_4834_9cb3_03b507fd58df' Source='V:\projects\sassymcp\dist\Most recent extract\tools\adb\AdbWinUsbApi.dll' KeyPath='yes' />
+      <Component Id="cmp_6d9e00bd_867c_4834_9cb3_03b507fd58df" Guid="{6d9e00bd-867c-4834-9cb3-03b507fd58df}">
+        <File Id="fil_6d9e00bd_867c_4834_9cb3_03b507fd58df" Source="V:\projects\sassymcp\dist\Most recent extract\tools\adb\AdbWinUsbApi.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_7c1d7d4a_7321_4305_ad17_6fdb6a4c9879' Guid='{7c1d7d4a-7321-4305-ad17-6fdb6a4c9879}'>
-        <File Id='fil_7c1d7d4a_7321_4305_ad17_6fdb6a4c9879' Source='V:\projects\sassymcp\dist\Most recent extract\tools\adb\libwinpthread-1.dll' KeyPath='yes' />
+      <Component Id="cmp_7c1d7d4a_7321_4305_ad17_6fdb6a4c9879" Guid="{7c1d7d4a-7321-4305-ad17-6fdb6a4c9879}">
+        <File Id="fil_7c1d7d4a_7321_4305_ad17_6fdb6a4c9879" Source="V:\projects\sassymcp\dist\Most recent extract\tools\adb\libwinpthread-1.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_0c615364_c570_4738_bc60_ba42204a1dfe' Guid='{0c615364-c570-4738-bc60-ba42204a1dfe}'>
-        <File Id='fil_0c615364_c570_4738_bc60_ba42204a1dfe' Source='V:\projects\sassymcp\dist\Most recent extract\tools\cloudflared\cloudflared.exe' KeyPath='yes' />
+      <Component Id="cmp_0c615364_c570_4738_bc60_ba42204a1dfe" Guid="{0c615364-c570-4738-bc60-ba42204a1dfe}">
+        <File Id="fil_0c615364_c570_4738_bc60_ba42204a1dfe" Source="V:\projects\sassymcp\dist\Most recent extract\tools\cloudflared\cloudflared.exe" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_624c7269_6aa3_49a5_97fd_9274e3be63ab' Guid='{624c7269-6aa3-49a5-97fd-9274e3be63ab}'>
-        <File Id='fil_624c7269_6aa3_49a5_97fd_9274e3be63ab' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\libcrypto-3.dll' KeyPath='yes' />
+      <Component Id="cmp_624c7269_6aa3_49a5_97fd_9274e3be63ab" Guid="{624c7269-6aa3-49a5-97fd-9274e3be63ab}">
+        <File Id="fil_624c7269_6aa3_49a5_97fd_9274e3be63ab" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\libcrypto-3.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_bbec430d_d456_4d21_9d9d_f0e483dd75e0' Guid='{bbec430d-d456-4d21-9d9d-f0e483dd75e0}'>
-        <File Id='fil_bbec430d_d456_4d21_9d9d_f0e483dd75e0' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\libssh2.dll' KeyPath='yes' />
+      <Component Id="cmp_bbec430d_d456_4d21_9d9d_f0e483dd75e0" Guid="{bbec430d-d456-4d21-9d9d-f0e483dd75e0}">
+        <File Id="fil_bbec430d_d456_4d21_9d9d_f0e483dd75e0" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\libssh2.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_b28fa78f_ca7f_4074_b2b1_b3ae8ee572b5' Guid='{b28fa78f-ca7f-4074-b2b1-b3ae8ee572b5}'>
-        <File Id='fil_b28fa78f_ca7f_4074_b2b1_b3ae8ee572b5' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\libssl-3.dll' KeyPath='yes' />
+      <Component Id="cmp_b28fa78f_ca7f_4074_b2b1_b3ae8ee572b5" Guid="{b28fa78f-ca7f-4074-b2b1-b3ae8ee572b5}">
+        <File Id="fil_b28fa78f_ca7f_4074_b2b1_b3ae8ee572b5" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\libssl-3.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_c0eb421e_db7e_404d_a02d_0e0d427271b2' Guid='{c0eb421e-db7e-404d-a02d-0e0d427271b2}'>
-        <File Id='fil_c0eb421e_db7e_404d_a02d_0e0d427271b2' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-mac-prefixes' KeyPath='yes' />
+      <Component Id="cmp_c0eb421e_db7e_404d_a02d_0e0d427271b2" Guid="{c0eb421e-db7e-404d-a02d-0e0d427271b2}">
+        <File Id="fil_c0eb421e_db7e_404d_a02d_0e0d427271b2" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-mac-prefixes" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_fa5bdfbf_293e_45aa_9775_ef6dc0c3635a' Guid='{fa5bdfbf-293e-45aa-9775-ef6dc0c3635a}'>
-        <File Id='fil_fa5bdfbf_293e_45aa_9775_ef6dc0c3635a' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-os-db' KeyPath='yes' />
+      <Component Id="cmp_fa5bdfbf_293e_45aa_9775_ef6dc0c3635a" Guid="{fa5bdfbf-293e-45aa-9775-ef6dc0c3635a}">
+        <File Id="fil_fa5bdfbf_293e_45aa_9775_ef6dc0c3635a" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-os-db" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_fa6d1758_260f_4c52_bb43_2a29b7a0572d' Guid='{fa6d1758-260f-4c52-bb43-2a29b7a0572d}'>
-        <File Id='fil_fa6d1758_260f_4c52_bb43_2a29b7a0572d' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-protocols' KeyPath='yes' />
+      <Component Id="cmp_fa6d1758_260f_4c52_bb43_2a29b7a0572d" Guid="{fa6d1758-260f-4c52-bb43-2a29b7a0572d}">
+        <File Id="fil_fa6d1758_260f_4c52_bb43_2a29b7a0572d" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-protocols" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_f3a2622b_ff9d_4f39_84fd_f044c181090e' Guid='{f3a2622b-ff9d-4f39-84fd-f044c181090e}'>
-        <File Id='fil_f3a2622b_ff9d_4f39_84fd_f044c181090e' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-service-probes' KeyPath='yes' />
+      <Component Id="cmp_f3a2622b_ff9d_4f39_84fd_f044c181090e" Guid="{f3a2622b-ff9d-4f39-84fd-f044c181090e}">
+        <File Id="fil_f3a2622b_ff9d_4f39_84fd_f044c181090e" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-service-probes" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_3b04ad9c_7f3a_411d_aeee_f9ef610454ac' Guid='{3b04ad9c-7f3a-411d-aeee-f9ef610454ac}'>
-        <File Id='fil_3b04ad9c_7f3a_411d_aeee_f9ef610454ac' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-services' KeyPath='yes' />
+      <Component Id="cmp_3b04ad9c_7f3a_411d_aeee_f9ef610454ac" Guid="{3b04ad9c-7f3a-411d-aeee-f9ef610454ac}">
+        <File Id="fil_3b04ad9c_7f3a_411d_aeee_f9ef610454ac" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap-services" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_ad851e9f_32c9_4bf8_b37f_940a1a9f2aa8' Guid='{ad851e9f-32c9-4bf8-b37f-940a1a9f2aa8}'>
-        <File Id='fil_ad851e9f_32c9_4bf8_b37f_940a1a9f2aa8' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap.exe' KeyPath='yes' />
+      <Component Id="cmp_ad851e9f_32c9_4bf8_b37f_940a1a9f2aa8" Guid="{ad851e9f-32c9-4bf8-b37f-940a1a9f2aa8}">
+        <File Id="fil_ad851e9f_32c9_4bf8_b37f_940a1a9f2aa8" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\nmap.exe" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_3f1b24ba_01da_4993_9c3f_8844a734238f' Guid='{3f1b24ba-01da-4993-9c3f-8844a734238f}'>
-        <File Id='fil_3f1b24ba_01da_4993_9c3f_8844a734238f' Source='V:\projects\sassymcp\dist\Most recent extract\tools\nmap\zlibwapi.dll' KeyPath='yes' />
+      <Component Id="cmp_3f1b24ba_01da_4993_9c3f_8844a734238f" Guid="{3f1b24ba-01da-4993-9c3f-8844a734238f}">
+        <File Id="fil_3f1b24ba_01da_4993_9c3f_8844a734238f" Source="V:\projects\sassymcp\dist\Most recent extract\tools\nmap\zlibwapi.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_90b0cdff_e073_451c_a837_d348d4d30a06' Guid='{90b0cdff-e073-451c-a837-d348d4d30a06}'>
-        <File Id='fil_90b0cdff_e073_451c_a837_d348d4d30a06' Source='V:\projects\sassymcp\dist\Most recent extract\tools\putty\plink.exe' KeyPath='yes' />
+      <Component Id="cmp_90b0cdff_e073_451c_a837_d348d4d30a06" Guid="{90b0cdff-e073-451c-a837-d348d4d30a06}">
+        <File Id="fil_90b0cdff_e073_451c_a837_d348d4d30a06" Source="V:\projects\sassymcp\dist\Most recent extract\tools\putty\plink.exe" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_66cf5333_63b0_48aa_9774_efb0f5b3dc00' Guid='{66cf5333-63b0-48aa-9774-efb0f5b3dc00}'>
-        <File Id='fil_66cf5333_63b0_48aa_9774_efb0f5b3dc00' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\AdbWinApi.dll' KeyPath='yes' />
+      <Component Id="cmp_66cf5333_63b0_48aa_9774_efb0f5b3dc00" Guid="{66cf5333-63b0-48aa-9774-efb0f5b3dc00}">
+        <File Id="fil_66cf5333_63b0_48aa_9774_efb0f5b3dc00" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\AdbWinApi.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_eeaebbf4_aba3_4b33_b963_5491b1fde4b7' Guid='{eeaebbf4-aba3-4b33-b963-5491b1fde4b7}'>
-        <File Id='fil_eeaebbf4_aba3_4b33_b963_5491b1fde4b7' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\AdbWinUsbApi.dll' KeyPath='yes' />
+      <Component Id="cmp_eeaebbf4_aba3_4b33_b963_5491b1fde4b7" Guid="{eeaebbf4-aba3-4b33-b963-5491b1fde4b7}">
+        <File Id="fil_eeaebbf4_aba3_4b33_b963_5491b1fde4b7" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\AdbWinUsbApi.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_e655a500_5bc1_405f_aff1_65cac4ef4985' Guid='{e655a500-5bc1-405f-aff1-65cac4ef4985}'>
-        <File Id='fil_e655a500_5bc1_405f_aff1_65cac4ef4985' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\avcodec-61.dll' KeyPath='yes' />
+      <Component Id="cmp_e655a500_5bc1_405f_aff1_65cac4ef4985" Guid="{e655a500-5bc1-405f-aff1-65cac4ef4985}">
+        <File Id="fil_e655a500_5bc1_405f_aff1_65cac4ef4985" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\avcodec-61.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_1573abc1_0554_4d4e_8d53_805506a8a1bd' Guid='{1573abc1-0554-4d4e-8d53-805506a8a1bd}'>
-        <File Id='fil_1573abc1_0554_4d4e_8d53_805506a8a1bd' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\avformat-61.dll' KeyPath='yes' />
+      <Component Id="cmp_1573abc1_0554_4d4e_8d53_805506a8a1bd" Guid="{1573abc1-0554-4d4e-8d53-805506a8a1bd}">
+        <File Id="fil_1573abc1_0554_4d4e_8d53_805506a8a1bd" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\avformat-61.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_e1bfd54e_21ec_4812_bac9_5b805246fe98' Guid='{e1bfd54e-21ec-4812-bac9-5b805246fe98}'>
-        <File Id='fil_e1bfd54e_21ec_4812_bac9_5b805246fe98' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\avutil-59.dll' KeyPath='yes' />
+      <Component Id="cmp_e1bfd54e_21ec_4812_bac9_5b805246fe98" Guid="{e1bfd54e-21ec-4812-bac9-5b805246fe98}">
+        <File Id="fil_e1bfd54e_21ec_4812_bac9_5b805246fe98" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\avutil-59.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_65ade32f_f0e0_4471_8c90_401e147eb350' Guid='{65ade32f-f0e0-4471-8c90-401e147eb350}'>
-        <File Id='fil_65ade32f_f0e0_4471_8c90_401e147eb350' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\libusb-1.0.dll' KeyPath='yes' />
+      <Component Id="cmp_65ade32f_f0e0_4471_8c90_401e147eb350" Guid="{65ade32f-f0e0-4471-8c90-401e147eb350}">
+        <File Id="fil_65ade32f_f0e0_4471_8c90_401e147eb350" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\libusb-1.0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_f1f19bd8_c860_4902_9e95_aa0399969abc' Guid='{f1f19bd8-c860-4902-9e95-aa0399969abc}'>
-        <File Id='fil_f1f19bd8_c860_4902_9e95_aa0399969abc' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\scrcpy-server' KeyPath='yes' />
+      <Component Id="cmp_f1f19bd8_c860_4902_9e95_aa0399969abc" Guid="{f1f19bd8-c860-4902-9e95-aa0399969abc}">
+        <File Id="fil_f1f19bd8_c860_4902_9e95_aa0399969abc" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\scrcpy-server" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_ab698dae_20ed_4b75_9194_37e5a475751c' Guid='{ab698dae-20ed-4b75-9194-37e5a475751c}'>
-        <File Id='fil_ab698dae_20ed_4b75_9194_37e5a475751c' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\scrcpy.exe' KeyPath='yes' />
+      <Component Id="cmp_ab698dae_20ed_4b75_9194_37e5a475751c" Guid="{ab698dae-20ed-4b75-9194-37e5a475751c}">
+        <File Id="fil_ab698dae_20ed_4b75_9194_37e5a475751c" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\scrcpy.exe" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_0d30c80f_54fa_4cfe_9d45_8ba4e6545f28' Guid='{0d30c80f-54fa-4cfe-9d45-8ba4e6545f28}'>
-        <File Id='fil_0d30c80f_54fa_4cfe_9d45_8ba4e6545f28' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\SDL2.dll' KeyPath='yes' />
+      <Component Id="cmp_0d30c80f_54fa_4cfe_9d45_8ba4e6545f28" Guid="{0d30c80f-54fa-4cfe-9d45-8ba4e6545f28}">
+        <File Id="fil_0d30c80f_54fa_4cfe_9d45_8ba4e6545f28" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\SDL2.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_ec9790e4_bec7_4f36_98cd_7dfc62100d05' Guid='{ec9790e4-bec7-4f36-98cd-7dfc62100d05}'>
-        <File Id='fil_ec9790e4_bec7_4f36_98cd_7dfc62100d05' Source='V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\swresample-5.dll' KeyPath='yes' />
+      <Component Id="cmp_ec9790e4_bec7_4f36_98cd_7dfc62100d05" Guid="{ec9790e4-bec7-4f36-98cd-7dfc62100d05}">
+        <File Id="fil_ec9790e4_bec7_4f36_98cd_7dfc62100d05" Source="V:\projects\sassymcp\dist\Most recent extract\tools\scrcpy\swresample-5.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_3d176f00_ffcc_46c7_8965_60e39a2c97c0' Guid='{3d176f00-ffcc-46c7-8965-60e39a2c97c0}'>
-        <File Id='fil_3d176f00_ffcc_46c7_8965_60e39a2c97c0' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libarchive-13.dll' KeyPath='yes' />
+      <Component Id="cmp_3d176f00_ffcc_46c7_8965_60e39a2c97c0" Guid="{3d176f00-ffcc-46c7-8965-60e39a2c97c0}">
+        <File Id="fil_3d176f00_ffcc_46c7_8965_60e39a2c97c0" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libarchive-13.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_48edd0c3_6d3b_4bcf_8a4e_41bd92179797' Guid='{48edd0c3-6d3b-4bcf-8a4e-41bd92179797}'>
-        <File Id='fil_48edd0c3_6d3b_4bcf_8a4e_41bd92179797' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libb2-1.dll' KeyPath='yes' />
+      <Component Id="cmp_48edd0c3_6d3b_4bcf_8a4e_41bd92179797" Guid="{48edd0c3-6d3b-4bcf-8a4e-41bd92179797}">
+        <File Id="fil_48edd0c3_6d3b_4bcf_8a4e_41bd92179797" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libb2-1.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_2937e773_7a7c_4120_b6c4_b2c71e68e71f' Guid='{2937e773-7a7c-4120-b6c4-b2c71e68e71f}'>
-        <File Id='fil_2937e773_7a7c_4120_b6c4_b2c71e68e71f' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libbrotlicommon.dll' KeyPath='yes' />
+      <Component Id="cmp_2937e773_7a7c_4120_b6c4_b2c71e68e71f" Guid="{2937e773-7a7c-4120-b6c4-b2c71e68e71f}">
+        <File Id="fil_2937e773_7a7c_4120_b6c4_b2c71e68e71f" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libbrotlicommon.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_2cfdbf3e_9875_4cab_850d_0f1f13d78e00' Guid='{2cfdbf3e-9875-4cab-850d-0f1f13d78e00}'>
-        <File Id='fil_2cfdbf3e_9875_4cab_850d_0f1f13d78e00' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libbrotlidec.dll' KeyPath='yes' />
+      <Component Id="cmp_2cfdbf3e_9875_4cab_850d_0f1f13d78e00" Guid="{2cfdbf3e-9875-4cab-850d-0f1f13d78e00}">
+        <File Id="fil_2cfdbf3e_9875_4cab_850d_0f1f13d78e00" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libbrotlidec.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_fd4cc7c4_6275_43dd_915d_a515759fc454' Guid='{fd4cc7c4-6275-43dd-915d-a515759fc454}'>
-        <File Id='fil_fd4cc7c4_6275_43dd_915d_a515759fc454' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libbz2-1.dll' KeyPath='yes' />
+      <Component Id="cmp_fd4cc7c4_6275_43dd_915d_a515759fc454" Guid="{fd4cc7c4-6275-43dd-915d-a515759fc454}">
+        <File Id="fil_fd4cc7c4_6275_43dd_915d_a515759fc454" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libbz2-1.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_9f07b24b_cb3a_42cf_9ac5_02df1e4ed7d5' Guid='{9f07b24b-cb3a-42cf-9ac5-02df1e4ed7d5}'>
-        <File Id='fil_9f07b24b_cb3a_42cf_9ac5_02df1e4ed7d5' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libcairo-2.dll' KeyPath='yes' />
+      <Component Id="cmp_9f07b24b_cb3a_42cf_9ac5_02df1e4ed7d5" Guid="{9f07b24b-cb3a-42cf-9ac5-02df1e4ed7d5}">
+        <File Id="fil_9f07b24b_cb3a_42cf_9ac5_02df1e4ed7d5" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libcairo-2.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_d88532e3_6d8b_4948_9f98_368b58f0f352' Guid='{d88532e3-6d8b-4948-9f98-368b58f0f352}'>
-        <File Id='fil_d88532e3_6d8b_4948_9f98_368b58f0f352' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libcrypto-3-x64.dll' KeyPath='yes' />
+      <Component Id="cmp_d88532e3_6d8b_4948_9f98_368b58f0f352" Guid="{d88532e3-6d8b-4948-9f98-368b58f0f352}">
+        <File Id="fil_d88532e3_6d8b_4948_9f98_368b58f0f352" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libcrypto-3-x64.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_47a56b3b_7d72_45eb_be5e_ded9d3a7195b' Guid='{47a56b3b-7d72-45eb-be5e-ded9d3a7195b}'>
-        <File Id='fil_47a56b3b_7d72_45eb_be5e_ded9d3a7195b' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libdatrie-1.dll' KeyPath='yes' />
+      <Component Id="cmp_47a56b3b_7d72_45eb_be5e_ded9d3a7195b" Guid="{47a56b3b-7d72-45eb-be5e-ded9d3a7195b}">
+        <File Id="fil_47a56b3b_7d72_45eb_be5e_ded9d3a7195b" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libdatrie-1.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_5ddd2d6d_cb56_4cfc_a6d5_34af45637a4d' Guid='{5ddd2d6d-cb56-4cfc-a6d5-34af45637a4d}'>
-        <File Id='fil_5ddd2d6d_cb56_4cfc_a6d5_34af45637a4d' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libdeflate.dll' KeyPath='yes' />
+      <Component Id="cmp_5ddd2d6d_cb56_4cfc_a6d5_34af45637a4d" Guid="{5ddd2d6d-cb56-4cfc-a6d5-34af45637a4d}">
+        <File Id="fil_5ddd2d6d_cb56_4cfc_a6d5_34af45637a4d" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libdeflate.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_4da927c3_f75f_4285_b69a_e7fd0cd359f1' Guid='{4da927c3-f75f-4285-b69a-e7fd0cd359f1}'>
-        <File Id='fil_4da927c3_f75f_4285_b69a_e7fd0cd359f1' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libexpat-1.dll' KeyPath='yes' />
+      <Component Id="cmp_4da927c3_f75f_4285_b69a_e7fd0cd359f1" Guid="{4da927c3-f75f-4285-b69a-e7fd0cd359f1}">
+        <File Id="fil_4da927c3_f75f_4285_b69a_e7fd0cd359f1" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libexpat-1.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_cfa27320_1cac_4726_a999_dbf276b13568' Guid='{cfa27320-1cac-4726-a999-dbf276b13568}'>
-        <File Id='fil_cfa27320_1cac_4726_a999_dbf276b13568' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libffi-8.dll' KeyPath='yes' />
+      <Component Id="cmp_cfa27320_1cac_4726_a999_dbf276b13568" Guid="{cfa27320-1cac-4726-a999-dbf276b13568}">
+        <File Id="fil_cfa27320_1cac_4726_a999_dbf276b13568" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libffi-8.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_98ebea14_3b17_447f_a08e_fe96e923053c' Guid='{98ebea14-3b17-447f-a08e-fe96e923053c}'>
-        <File Id='fil_98ebea14_3b17_447f_a08e_fe96e923053c' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libfontconfig-1.dll' KeyPath='yes' />
+      <Component Id="cmp_98ebea14_3b17_447f_a08e_fe96e923053c" Guid="{98ebea14-3b17-447f-a08e-fe96e923053c}">
+        <File Id="fil_98ebea14_3b17_447f_a08e_fe96e923053c" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libfontconfig-1.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_3fe21eb2_a241_41d7_ad71_1e066b5d066e' Guid='{3fe21eb2-a241-41d7-ad71-1e066b5d066e}'>
-        <File Id='fil_3fe21eb2_a241_41d7_ad71_1e066b5d066e' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libfreetype-6.dll' KeyPath='yes' />
+      <Component Id="cmp_3fe21eb2_a241_41d7_ad71_1e066b5d066e" Guid="{3fe21eb2-a241-41d7-ad71-1e066b5d066e}">
+        <File Id="fil_3fe21eb2_a241_41d7_ad71_1e066b5d066e" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libfreetype-6.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_8dd92ee9_4522_418d_af77_d048e0f19466' Guid='{8dd92ee9-4522-418d-af77-d048e0f19466}'>
-        <File Id='fil_8dd92ee9_4522_418d_af77_d048e0f19466' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libfribidi-0.dll' KeyPath='yes' />
+      <Component Id="cmp_8dd92ee9_4522_418d_af77_d048e0f19466" Guid="{8dd92ee9-4522-418d-af77-d048e0f19466}">
+        <File Id="fil_8dd92ee9_4522_418d_af77_d048e0f19466" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libfribidi-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_098e12cb_dc63_40b0_aa22_424dcb2585fb' Guid='{098e12cb-dc63-40b0-aa22-424dcb2585fb}'>
-        <File Id='fil_098e12cb_dc63_40b0_aa22_424dcb2585fb' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgcc_s_seh-1.dll' KeyPath='yes' />
+      <Component Id="cmp_098e12cb_dc63_40b0_aa22_424dcb2585fb" Guid="{098e12cb-dc63-40b0-aa22-424dcb2585fb}">
+        <File Id="fil_098e12cb_dc63_40b0_aa22_424dcb2585fb" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgcc_s_seh-1.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_baadd8f6_2022_4c86_9f3e_64f8ac24a92a' Guid='{baadd8f6-2022-4c86-9f3e-64f8ac24a92a}'>
-        <File Id='fil_baadd8f6_2022_4c86_9f3e_64f8ac24a92a' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgif-7.dll' KeyPath='yes' />
+      <Component Id="cmp_baadd8f6_2022_4c86_9f3e_64f8ac24a92a" Guid="{baadd8f6-2022-4c86-9f3e-64f8ac24a92a}">
+        <File Id="fil_baadd8f6_2022_4c86_9f3e_64f8ac24a92a" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgif-7.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_c0225e7e_c3ef_4624_82f8_32ee010fc580' Guid='{c0225e7e-c3ef-4624-82f8-32ee010fc580}'>
-        <File Id='fil_c0225e7e_c3ef_4624_82f8_32ee010fc580' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgio-2.0-0.dll' KeyPath='yes' />
+      <Component Id="cmp_c0225e7e_c3ef_4624_82f8_32ee010fc580" Guid="{c0225e7e-c3ef-4624-82f8-32ee010fc580}">
+        <File Id="fil_c0225e7e_c3ef_4624_82f8_32ee010fc580" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgio-2.0-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_a7e9a74f_30a6_4c8b_85f0_e46e6c971694' Guid='{a7e9a74f-30a6-4c8b-85f0-e46e6c971694}'>
-        <File Id='fil_a7e9a74f_30a6_4c8b_85f0_e46e6c971694' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libglib-2.0-0.dll' KeyPath='yes' />
+      <Component Id="cmp_a7e9a74f_30a6_4c8b_85f0_e46e6c971694" Guid="{a7e9a74f-30a6-4c8b-85f0-e46e6c971694}">
+        <File Id="fil_a7e9a74f_30a6_4c8b_85f0_e46e6c971694" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libglib-2.0-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_0d7b6a14_8798_4316_a574_f5d53c7380ff' Guid='{0d7b6a14-8798-4316-a574-f5d53c7380ff}'>
-        <File Id='fil_0d7b6a14_8798_4316_a574_f5d53c7380ff' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgmodule-2.0-0.dll' KeyPath='yes' />
+      <Component Id="cmp_0d7b6a14_8798_4316_a574_f5d53c7380ff" Guid="{0d7b6a14-8798-4316-a574-f5d53c7380ff}">
+        <File Id="fil_0d7b6a14_8798_4316_a574_f5d53c7380ff" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgmodule-2.0-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_9d1ef747_01d6_4524_8c82_eabea5360b8b' Guid='{9d1ef747-01d6-4524-8c82-eabea5360b8b}'>
-        <File Id='fil_9d1ef747_01d6_4524_8c82_eabea5360b8b' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgobject-2.0-0.dll' KeyPath='yes' />
+      <Component Id="cmp_9d1ef747_01d6_4524_8c82_eabea5360b8b" Guid="{9d1ef747-01d6-4524-8c82-eabea5360b8b}">
+        <File Id="fil_9d1ef747_01d6_4524_8c82_eabea5360b8b" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgobject-2.0-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_8eb22356_1da6_40f7_bf65_c6d0e8a2b184' Guid='{8eb22356-1da6-40f7-bf65-c6d0e8a2b184}'>
-        <File Id='fil_8eb22356_1da6_40f7_bf65_c6d0e8a2b184' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgraphite2.dll' KeyPath='yes' />
+      <Component Id="cmp_8eb22356_1da6_40f7_bf65_c6d0e8a2b184" Guid="{8eb22356-1da6-40f7-bf65-c6d0e8a2b184}">
+        <File Id="fil_8eb22356_1da6_40f7_bf65_c6d0e8a2b184" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libgraphite2.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_ee189bec_5572_4db8_a85d_a6292ac548a7' Guid='{ee189bec-5572-4db8-a85d-a6292ac548a7}'>
-        <File Id='fil_ee189bec_5572_4db8_a85d_a6292ac548a7' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libharfbuzz-0.dll' KeyPath='yes' />
+      <Component Id="cmp_ee189bec_5572_4db8_a85d_a6292ac548a7" Guid="{ee189bec-5572-4db8-a85d-a6292ac548a7}">
+        <File Id="fil_ee189bec_5572_4db8_a85d_a6292ac548a7" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libharfbuzz-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_546032d4_afe3_4e24_b6be_60ce2da3244b' Guid='{546032d4-afe3-4e24-b6be-60ce2da3244b}'>
-        <File Id='fil_546032d4_afe3_4e24_b6be_60ce2da3244b' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libiconv-2.dll' KeyPath='yes' />
+      <Component Id="cmp_546032d4_afe3_4e24_b6be_60ce2da3244b" Guid="{546032d4-afe3-4e24-b6be-60ce2da3244b}">
+        <File Id="fil_546032d4_afe3_4e24_b6be_60ce2da3244b" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libiconv-2.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_03034229_fe44_4231_9d23_df325f5858ff' Guid='{03034229-fe44-4231-9d23-df325f5858ff}'>
-        <File Id='fil_03034229_fe44_4231_9d23_df325f5858ff' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libicudt75.dll' KeyPath='yes' />
+      <Component Id="cmp_03034229_fe44_4231_9d23_df325f5858ff" Guid="{03034229-fe44-4231-9d23-df325f5858ff}">
+        <File Id="fil_03034229_fe44_4231_9d23_df325f5858ff" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libicudt75.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_2911ea4e_7921_405e_a18d_f697d13dc45b' Guid='{2911ea4e-7921-405e-a18d-f697d13dc45b}'>
-        <File Id='fil_2911ea4e_7921_405e_a18d_f697d13dc45b' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libicuin75.dll' KeyPath='yes' />
+      <Component Id="cmp_2911ea4e_7921_405e_a18d_f697d13dc45b" Guid="{2911ea4e-7921-405e-a18d-f697d13dc45b}">
+        <File Id="fil_2911ea4e_7921_405e_a18d_f697d13dc45b" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libicuin75.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_83538d4d_d926_4962_8bab_43d259f61ed6' Guid='{83538d4d-d926-4962-8bab-43d259f61ed6}'>
-        <File Id='fil_83538d4d_d926_4962_8bab_43d259f61ed6' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libicuuc75.dll' KeyPath='yes' />
+      <Component Id="cmp_83538d4d_d926_4962_8bab_43d259f61ed6" Guid="{83538d4d-d926-4962-8bab-43d259f61ed6}">
+        <File Id="fil_83538d4d_d926_4962_8bab_43d259f61ed6" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libicuuc75.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_626681a2_914f_4773_b3f6_c26ce40dbf73' Guid='{626681a2-914f-4773-b3f6-c26ce40dbf73}'>
-        <File Id='fil_626681a2_914f_4773_b3f6_c26ce40dbf73' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libintl-8.dll' KeyPath='yes' />
+      <Component Id="cmp_626681a2_914f_4773_b3f6_c26ce40dbf73" Guid="{626681a2-914f-4773-b3f6-c26ce40dbf73}">
+        <File Id="fil_626681a2_914f_4773_b3f6_c26ce40dbf73" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libintl-8.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_ba62384b_2e34_4ec8_963f_4e5b0b8edd14' Guid='{ba62384b-2e34-4ec8-963f-4e5b0b8edd14}'>
-        <File Id='fil_ba62384b_2e34_4ec8_963f_4e5b0b8edd14' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libjbig-0.dll' KeyPath='yes' />
+      <Component Id="cmp_ba62384b_2e34_4ec8_963f_4e5b0b8edd14" Guid="{ba62384b-2e34-4ec8-963f-4e5b0b8edd14}">
+        <File Id="fil_ba62384b_2e34_4ec8_963f_4e5b0b8edd14" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libjbig-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_e0abb6bf_21d7_47f7_9f01_00142bc1506e' Guid='{e0abb6bf-21d7-47f7-9f01-00142bc1506e}'>
-        <File Id='fil_e0abb6bf_21d7_47f7_9f01_00142bc1506e' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libjpeg-8.dll' KeyPath='yes' />
+      <Component Id="cmp_e0abb6bf_21d7_47f7_9f01_00142bc1506e" Guid="{e0abb6bf-21d7-47f7-9f01-00142bc1506e}">
+        <File Id="fil_e0abb6bf_21d7_47f7_9f01_00142bc1506e" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libjpeg-8.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_cdd37c24_6c74_4539_98ee_0209c8d79720' Guid='{cdd37c24-6c74-4539-98ee-0209c8d79720}'>
-        <File Id='fil_cdd37c24_6c74_4539_98ee_0209c8d79720' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libleptonica-6.dll' KeyPath='yes' />
+      <Component Id="cmp_cdd37c24_6c74_4539_98ee_0209c8d79720" Guid="{cdd37c24-6c74-4539-98ee-0209c8d79720}">
+        <File Id="fil_cdd37c24_6c74_4539_98ee_0209c8d79720" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libleptonica-6.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_95b81c00_cf1b_433c_af29_61daca5292ec' Guid='{95b81c00-cf1b-433c-af29-61daca5292ec}'>
-        <File Id='fil_95b81c00_cf1b_433c_af29_61daca5292ec' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libLerc.dll' KeyPath='yes' />
+      <Component Id="cmp_95b81c00_cf1b_433c_af29_61daca5292ec" Guid="{95b81c00-cf1b-433c-af29-61daca5292ec}">
+        <File Id="fil_95b81c00_cf1b_433c_af29_61daca5292ec" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libLerc.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_25bcdf3a_943c_4c39_98c8_6310a492bd5b' Guid='{25bcdf3a-943c-4c39-98c8-6310a492bd5b}'>
-        <File Id='fil_25bcdf3a_943c_4c39_98c8_6310a492bd5b' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\liblz4.dll' KeyPath='yes' />
+      <Component Id="cmp_25bcdf3a_943c_4c39_98c8_6310a492bd5b" Guid="{25bcdf3a-943c-4c39-98c8-6310a492bd5b}">
+        <File Id="fil_25bcdf3a_943c_4c39_98c8_6310a492bd5b" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\liblz4.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_67e7a0f2_14d6_4286_994e_afc9c3107d06' Guid='{67e7a0f2-14d6-4286-994e-afc9c3107d06}'>
-        <File Id='fil_67e7a0f2_14d6_4286_994e_afc9c3107d06' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\liblzma-5.dll' KeyPath='yes' />
+      <Component Id="cmp_67e7a0f2_14d6_4286_994e_afc9c3107d06" Guid="{67e7a0f2-14d6-4286-994e-afc9c3107d06}">
+        <File Id="fil_67e7a0f2_14d6_4286_994e_afc9c3107d06" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\liblzma-5.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_a195f499_f153_4165_a8bc_bec720643d98' Guid='{a195f499-f153-4165-a8bc-bec720643d98}'>
-        <File Id='fil_a195f499_f153_4165_a8bc_bec720643d98' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libopenjp2-7.dll' KeyPath='yes' />
+      <Component Id="cmp_a195f499_f153_4165_a8bc_bec720643d98" Guid="{a195f499-f153-4165-a8bc-bec720643d98}">
+        <File Id="fil_a195f499_f153_4165_a8bc_bec720643d98" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libopenjp2-7.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_7b88e8a0_f814_45b0_9e13_4ce3cc82849d' Guid='{7b88e8a0-f814-45b0-9e13-4ce3cc82849d}'>
-        <File Id='fil_7b88e8a0_f814_45b0_9e13_4ce3cc82849d' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpango-1.0-0.dll' KeyPath='yes' />
+      <Component Id="cmp_7b88e8a0_f814_45b0_9e13_4ce3cc82849d" Guid="{7b88e8a0-f814-45b0-9e13-4ce3cc82849d}">
+        <File Id="fil_7b88e8a0_f814_45b0_9e13_4ce3cc82849d" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpango-1.0-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_3a2e4a66_18b9_4574_a4ae_6b42bbd5d67d' Guid='{3a2e4a66-18b9-4574-a4ae-6b42bbd5d67d}'>
-        <File Id='fil_3a2e4a66_18b9_4574_a4ae_6b42bbd5d67d' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpangocairo-1.0-0.dll' KeyPath='yes' />
+      <Component Id="cmp_3a2e4a66_18b9_4574_a4ae_6b42bbd5d67d" Guid="{3a2e4a66-18b9-4574-a4ae-6b42bbd5d67d}">
+        <File Id="fil_3a2e4a66_18b9_4574_a4ae_6b42bbd5d67d" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpangocairo-1.0-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_4f2bd7b1_2758_42ce_a55d_02fd2d52b963' Guid='{4f2bd7b1-2758-42ce-a55d-02fd2d52b963}'>
-        <File Id='fil_4f2bd7b1_2758_42ce_a55d_02fd2d52b963' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpangoft2-1.0-0.dll' KeyPath='yes' />
+      <Component Id="cmp_4f2bd7b1_2758_42ce_a55d_02fd2d52b963" Guid="{4f2bd7b1-2758-42ce-a55d-02fd2d52b963}">
+        <File Id="fil_4f2bd7b1_2758_42ce_a55d_02fd2d52b963" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpangoft2-1.0-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_60a98df8_9e3e_413e_83c0_f6ff7fcf7f2e' Guid='{60a98df8-9e3e-413e-83c0-f6ff7fcf7f2e}'>
-        <File Id='fil_60a98df8_9e3e_413e_83c0_f6ff7fcf7f2e' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpangowin32-1.0-0.dll' KeyPath='yes' />
+      <Component Id="cmp_60a98df8_9e3e_413e_83c0_f6ff7fcf7f2e" Guid="{60a98df8-9e3e-413e-83c0-f6ff7fcf7f2e}">
+        <File Id="fil_60a98df8_9e3e_413e_83c0_f6ff7fcf7f2e" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpangowin32-1.0-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_0efcf905_6092_4439_8df5_bb76e6757b54' Guid='{0efcf905-6092-4439-8df5-bb76e6757b54}'>
-        <File Id='fil_0efcf905_6092_4439_8df5_bb76e6757b54' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpcre2-8-0.dll' KeyPath='yes' />
+      <Component Id="cmp_0efcf905_6092_4439_8df5_bb76e6757b54" Guid="{0efcf905-6092-4439-8df5-bb76e6757b54}">
+        <File Id="fil_0efcf905_6092_4439_8df5_bb76e6757b54" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpcre2-8-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_cde4c4d8_f19b_467d_b638_d7a3bab18536' Guid='{cde4c4d8-f19b-467d-b638-d7a3bab18536}'>
-        <File Id='fil_cde4c4d8_f19b_467d_b638_d7a3bab18536' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpixman-1-0.dll' KeyPath='yes' />
+      <Component Id="cmp_cde4c4d8_f19b_467d_b638_d7a3bab18536" Guid="{cde4c4d8-f19b-467d-b638-d7a3bab18536}">
+        <File Id="fil_cde4c4d8_f19b_467d_b638_d7a3bab18536" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpixman-1-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_96eb78d3_7211_4ff1_a935_6449e4268f51' Guid='{96eb78d3-7211-4ff1-a935-6449e4268f51}'>
-        <File Id='fil_96eb78d3_7211_4ff1_a935_6449e4268f51' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpng16-16.dll' KeyPath='yes' />
+      <Component Id="cmp_96eb78d3_7211_4ff1_a935_6449e4268f51" Guid="{96eb78d3-7211-4ff1-a935-6449e4268f51}">
+        <File Id="fil_96eb78d3_7211_4ff1_a935_6449e4268f51" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libpng16-16.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_3279723e_f12e_4adc_9a38_f8aae9a41d12' Guid='{3279723e-f12e-4adc-9a38-f8aae9a41d12}'>
-        <File Id='fil_3279723e_f12e_4adc_9a38_f8aae9a41d12' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libsharpyuv-0.dll' KeyPath='yes' />
+      <Component Id="cmp_3279723e_f12e_4adc_9a38_f8aae9a41d12" Guid="{3279723e-f12e-4adc-9a38-f8aae9a41d12}">
+        <File Id="fil_3279723e_f12e_4adc_9a38_f8aae9a41d12" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libsharpyuv-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_509fdca7_2a09_45e5_913b_3ce457941669' Guid='{509fdca7-2a09-45e5-913b-3ce457941669}'>
-        <File Id='fil_509fdca7_2a09_45e5_913b_3ce457941669' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libstdc++-6.dll' KeyPath='yes' />
+      <Component Id="cmp_509fdca7_2a09_45e5_913b_3ce457941669" Guid="{509fdca7-2a09-45e5-913b-3ce457941669}">
+        <File Id="fil_509fdca7_2a09_45e5_913b_3ce457941669" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libstdc++-6.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_7874a76a_339a_4ab4_a30d_6ac79c214387' Guid='{7874a76a-339a-4ab4-a30d-6ac79c214387}'>
-        <File Id='fil_7874a76a_339a_4ab4_a30d_6ac79c214387' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libtesseract-5.dll' KeyPath='yes' />
+      <Component Id="cmp_7874a76a_339a_4ab4_a30d_6ac79c214387" Guid="{7874a76a-339a-4ab4-a30d-6ac79c214387}">
+        <File Id="fil_7874a76a_339a_4ab4_a30d_6ac79c214387" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libtesseract-5.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_decccbe6_0436_4d2d_a5cc_ae9c8c3355f2' Guid='{decccbe6-0436-4d2d-a5cc-ae9c8c3355f2}'>
-        <File Id='fil_decccbe6_0436_4d2d_a5cc_ae9c8c3355f2' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libthai-0.dll' KeyPath='yes' />
+      <Component Id="cmp_decccbe6_0436_4d2d_a5cc_ae9c8c3355f2" Guid="{decccbe6-0436-4d2d-a5cc-ae9c8c3355f2}">
+        <File Id="fil_decccbe6_0436_4d2d_a5cc_ae9c8c3355f2" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libthai-0.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_db6f3fa2_5f03_49d7_9cb6_1e2bbcf0e686' Guid='{db6f3fa2-5f03-49d7-9cb6-1e2bbcf0e686}'>
-        <File Id='fil_db6f3fa2_5f03_49d7_9cb6_1e2bbcf0e686' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libtiff-6.dll' KeyPath='yes' />
+      <Component Id="cmp_db6f3fa2_5f03_49d7_9cb6_1e2bbcf0e686" Guid="{db6f3fa2-5f03-49d7-9cb6-1e2bbcf0e686}">
+        <File Id="fil_db6f3fa2_5f03_49d7_9cb6_1e2bbcf0e686" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libtiff-6.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_9bbc843e_dc76_462b_b676_135a8e7cfa1d' Guid='{9bbc843e-dc76-462b-b676-135a8e7cfa1d}'>
-        <File Id='fil_9bbc843e_dc76_462b_b676_135a8e7cfa1d' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libwebp-7.dll' KeyPath='yes' />
+      <Component Id="cmp_9bbc843e_dc76_462b_b676_135a8e7cfa1d" Guid="{9bbc843e-dc76-462b-b676-135a8e7cfa1d}">
+        <File Id="fil_9bbc843e_dc76_462b_b676_135a8e7cfa1d" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libwebp-7.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_1ef6f63d_0bad_4ea8_bfd2_a1201b379596' Guid='{1ef6f63d-0bad-4ea8-bfd2-a1201b379596}'>
-        <File Id='fil_1ef6f63d_0bad_4ea8_bfd2_a1201b379596' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libwebpmux-3.dll' KeyPath='yes' />
+      <Component Id="cmp_1ef6f63d_0bad_4ea8_bfd2_a1201b379596" Guid="{1ef6f63d-0bad-4ea8-bfd2-a1201b379596}">
+        <File Id="fil_1ef6f63d_0bad_4ea8_bfd2_a1201b379596" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libwebpmux-3.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_b4066a93_1dfa_4f3c_aaa7_6869cbab6244' Guid='{b4066a93-1dfa-4f3c-aaa7-6869cbab6244}'>
-        <File Id='fil_b4066a93_1dfa_4f3c_aaa7_6869cbab6244' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libwinpthread-1.dll' KeyPath='yes' />
+      <Component Id="cmp_b4066a93_1dfa_4f3c_aaa7_6869cbab6244" Guid="{b4066a93-1dfa-4f3c-aaa7-6869cbab6244}">
+        <File Id="fil_b4066a93_1dfa_4f3c_aaa7_6869cbab6244" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libwinpthread-1.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_99e80ef8_97c9_40b3_b737_142d1709ccbf' Guid='{99e80ef8-97c9-40b3-b737-142d1709ccbf}'>
-        <File Id='fil_99e80ef8_97c9_40b3_b737_142d1709ccbf' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libzstd.dll' KeyPath='yes' />
+      <Component Id="cmp_99e80ef8_97c9_40b3_b737_142d1709ccbf" Guid="{99e80ef8-97c9-40b3-b737-142d1709ccbf}">
+        <File Id="fil_99e80ef8_97c9_40b3_b737_142d1709ccbf" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\libzstd.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_ad15c3cd_e96f_4b04_b0de_2efb3324c437' Guid='{ad15c3cd-e96f-4b04-b0de-2efb3324c437}'>
-        <File Id='fil_ad15c3cd_e96f_4b04_b0de_2efb3324c437' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\tesseract.exe' KeyPath='yes' />
+      <Component Id="cmp_ad15c3cd_e96f_4b04_b0de_2efb3324c437" Guid="{ad15c3cd-e96f-4b04-b0de-2efb3324c437}">
+        <File Id="fil_ad15c3cd_e96f_4b04_b0de_2efb3324c437" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\tesseract.exe" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_983f8784_4b49_4761_bd08_a3054ac51a19' Guid='{983f8784-4b49-4761-bd08-a3054ac51a19}'>
-        <File Id='fil_983f8784_4b49_4761_bd08_a3054ac51a19' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\zlib1.dll' KeyPath='yes' />
+      <Component Id="cmp_983f8784_4b49_4761_bd08_a3054ac51a19" Guid="{983f8784-4b49-4761-bd08-a3054ac51a19}">
+        <File Id="fil_983f8784_4b49_4761_bd08_a3054ac51a19" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\zlib1.dll" KeyPath="yes" />
       </Component>
-      <Component Id='cmp_9b5c6c49_bc62_4a50_ac59_e6284bc2544a' Guid='{9b5c6c49-bc62-4a50-ac59-e6284bc2544a}'>
-        <File Id='fil_9b5c6c49_bc62_4a50_ac59_e6284bc2544a' Source='V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\tessdata\eng.traineddata' KeyPath='yes' />
+      <Component Id="cmp_9b5c6c49_bc62_4a50_ac59_e6284bc2544a" Guid="{9b5c6c49-bc62-4a50-ac59-e6284bc2544a}">
+        <File Id="fil_9b5c6c49_bc62_4a50_ac59_e6284bc2544a" Source="V:\projects\sassymcp\dist\Most recent extract\tools\tesseract\tessdata\eng.traineddata" KeyPath="yes" />
       </Component>
     </ComponentGroup>
   </Fragment>
