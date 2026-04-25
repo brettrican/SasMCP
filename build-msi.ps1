@@ -2,10 +2,10 @@
 # Usage: Run this script from the project root
 
 $ProductName = "SassyMCP"
-$ProductVersion = "1.2.0"
+$ProductVersion = "1.3.0"
 $Manufacturer = "SassyMCP Contributors"
 $SourceDir = "dist/Most recent extract"
-$OutputMsi = "SassyMCP-v1.2.0.msi"
+$OutputMsi = "SassyMCP-v1.3.0.msi"
 $WxsFile = "installer.wxs"
 
 # Generate WiX XML (WXS) file

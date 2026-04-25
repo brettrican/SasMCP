@@ -1,5 +1,5 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="SassyMCP" Language="1033" Version="1.2.0" Manufacturer="SassyMCP Contributors" UpgradeCode="b5db2d17-41bf-4b2b-9ba5-70f5c1d933d4">
+  <Package Name="SassyMCP" Language="1033" Version="1.3.0" Manufacturer="SassyMCP Contributors" UpgradeCode="b5db2d17-41bf-4b2b-9ba5-70f5c1d933d4">
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     <MajorUpgrade DowngradeErrorMessage="A newer version of SassyMCP is already installed." />
 
