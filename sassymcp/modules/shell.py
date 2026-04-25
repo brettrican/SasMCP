@@ -197,12 +197,25 @@ def register(server):
         if not ok:
             return f"Error: {err}"
 
-        # Intercept delete commands — move targets to staging folder
+       # Intercept delete commands — move targets to staging folder
         is_delete, keyword = detect_delete_intent(command)
         if is_delete:
-            targets = _parse_delete_targets(command)
-            return await _safe_move_to_staging(targets, keyword, command)
-
+            # Only auto-stage when we matched a KEYWORD (rm/del/remove-item/etc.).
+            # Regex pattern matches (e.g. "truncate-by-redirect", "new-item -force")
+            # cannot reliably identify which token is the target, so staging every
+            # space-separated word is actively destructive. Block-only for those.
+            from sassymcp.modules._security import _DELETE_KEYWORDS
+            kw_root = keyword.split(":", 1)[-1]  # strips "encodedcommand:" prefix
+            if kw_root in _DELETE_KEYWORDS:
+                targets = _parse_delete_targets(command)
+                return await _safe_move_to_staging(targets, keyword, command)
+            return (
+                f"Command blocked (safety): matched destructive pattern "
+                f"'{keyword}'. No files were moved.\n"
+                f"If this was a false positive, rephrase the command or use "
+                f"sassy_safe_delete() for intentional deletions."
+            )
+            
         # Clamp timeout
         timeout_seconds = min(max(timeout_seconds, 1), _MAX_TIMEOUT)
 

@@ -1,14 +1,14 @@
 @echo off
-REM ==============================================================
-REM  SassyMCP - Local Stdio Mode (Claude Desktop direct pipe)
+REM ══════════════════════════════════════════════════════════════
+REM  SassyMCP — Local Stdio Mode (Claude Desktop direct pipe)
 REM  No network exposure. Safest mode.
-REM ==============================================================
+REM ══════════════════════════════════════════════════════════════
 
 set SASSYMCP_LOAD_ALL=1
 
-echo ===========================================
-echo  SassyMCP - Local Mode (stdio)
-echo ===========================================
+echo ═══════════════════════════════════════════
+echo  SassyMCP — Local Mode (stdio)
+echo ═══════════════════════════════════════════
 echo.
 
 if exist "%~dp0dist\sassymcp.exe" (

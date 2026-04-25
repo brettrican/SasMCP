@@ -80,6 +80,11 @@ cases = [
     ("Set-Content -Path foo -Value hello world", False),            # D8
     ("Out-File target.txt", False),                                 # Out-File WITHOUT -Force ok
     ("New-Item foo.txt", False),                                    # New-Item WITHOUT -Force ok
+    ("New-Item -ItemType Directory -Path foo -Force", False),       # idempotent dir create ok
+    ("New-Item -ItemType Directory foo -Force", False),             # positional path, dir create ok
+    ("New-Item -Force -ItemType Directory foo", False),             # flag-order variation
+    ("New-Item -ItemType SymbolicLink -Path l -Target t -Force", False),  # symlink create ok
+    ("New-Item -ItemType Junction -Path j -Target t -Force", False),     # junction create ok
     ("copy foo bar", False),                                        # copy WITHOUT /y ok
     ("robocopy V:\\src V:\\dst", False),                            # plain robocopy ok
     ("echo foo >> bar.txt", False),                                 # append redirect ok

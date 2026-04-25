@@ -3,17 +3,6 @@ revision = 3
 requires-python = ">=3.11"
 
 [[package]]
-name = "adb-shell"
-version = "0.4.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cryptography" },
-    { name = "pyasn1" },
-    { name = "rsa" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8f/73/d246034db6f3e374dad9a35ee3f61345a6b239d4febd2a41ab69df9936fe/adb_shell-0.4.4.tar.gz", hash = "sha256:04c305f30a2ca25d5c54b3cd6ce9bb64c36e5f07967b23b3fb6aaecc851b90b6", size = 61822, upload-time = "2023-09-01T03:48:40.348Z" }
-
-[[package]]
 name = "annotated-types"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -664,15 +653,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pyasn1"
-version = "0.6.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fe/b6/6e630dff89739fcd427e3f72b3d905ce0acb85a45d4ec3e2678718a3487f/pyasn1-0.6.2.tar.gz", hash = "sha256:9b59a2b25ba7e4f8197db7686c09fb33e658b98339fadb826e9512629017833b", size = 146586, upload-time = "2026-01-16T18:04:18.534Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/b5/a96872e5184f354da9c84ae119971a0a4c221fe9b27a4d94bd43f2596727/pyasn1-0.6.2-py3-none-any.whl", hash = "sha256:1eb26d860996a18e9b6ed05e7aae0e9fc21619fcee6af91cca9bad4fbea224bf", size = 83371, upload-time = "2026-01-16T18:04:17.174Z" },
-]
-
-[[package]]
 name = "pyautogui"
 version = "0.9.54"
 source = { registry = "https://pypi.org/simple" }
@@ -1177,18 +1157,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rsa"
-version = "4.9.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyasn1" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/da/8a/22b7beea3ee0d44b1916c0c1cb0ee3af23b700b6da9f04991899d0c555d4/rsa-4.9.1.tar.gz", hash = "sha256:e7bdbfdb5497da4c07dfd35530e1a902659db6ff241e39d9953cad06ebd0ae75", size = 29034, upload-time = "2025-04-16T09:51:18.218Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/64/8d/0133e4eb4beed9e425d9a98ed6e081a55d195481b7632472be1af08d2f6b/rsa-4.9.1-py3-none-any.whl", hash = "sha256:68635866661c6836b8d39430f97a996acbd61bfa49406748ea243539fe239762", size = 34696, upload-time = "2025-04-16T09:51:17.142Z" },
-]
-
-[[package]]
 name = "rubicon-objc"
 version = "0.5.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1224,9 +1192,10 @@ wheels = [
 
 [[package]]
 name = "sassymcp"
-version = "1.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cryptography" },
+    { name = "httpx" },
     { name = "mcp" },
     { name = "pillow" },
     { name = "psutil" },
@@ -1237,26 +1206,14 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
-    { name = "adb-shell" },
-    { name = "httpx" },
     { name = "playwright" },
     { name = "pytesseract" },
-    { name = "scapy" },
     { name = "watchdog" },
-]
-android = [
-    { name = "adb-shell" },
 ]
 dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
-]
-github = [
-    { name = "httpx" },
-]
-network = [
-    { name = "scapy" },
 ]
 reload = [
     { name = "watchdog" },
@@ -1265,17 +1222,13 @@ vision = [
     { name = "pytesseract" },
 ]
 web = [
-    { name = "httpx" },
     { name = "playwright" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "adb-shell", marker = "extra == 'all'", specifier = ">=0.4.4" },
-    { name = "adb-shell", marker = "extra == 'android'", specifier = ">=0.4.4" },
-    { name = "httpx", marker = "extra == 'all'", specifier = ">=0.27.0" },
-    { name = "httpx", marker = "extra == 'github'", specifier = ">=0.27.0" },
-    { name = "httpx", marker = "extra == 'web'", specifier = ">=0.27.0" },
+    { name = "cryptography", specifier = ">=42.0.0" },
+    { name = "httpx", specifier = ">=0.27.0" },
     { name = "mcp", specifier = ">=1.0.0,<2.0.0" },
     { name = "mypy", marker = "extra == 'dev'" },
     { name = "pillow", specifier = ">=10.0.0" },
@@ -1288,22 +1241,11 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pywinauto", specifier = ">=0.6.8" },
     { name = "ruff", marker = "extra == 'dev'" },
-    { name = "scapy", marker = "extra == 'all'", specifier = ">=2.5.0" },
-    { name = "scapy", marker = "extra == 'network'", specifier = ">=2.5.0" },
     { name = "uvicorn", specifier = ">=0.30.0" },
     { name = "watchdog", marker = "extra == 'all'", specifier = ">=3.0.0" },
     { name = "watchdog", marker = "extra == 'reload'", specifier = ">=3.0.0" },
 ]
-provides-extras = ["dev", "reload", "android", "network", "vision", "web", "github", "all"]
-
-[[package]]
-name = "scapy"
-version = "2.7.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/82/97/7caec64f05eae3d305d83e7cce1ef2f337710513b89efb334f7278202e79/scapy-2.7.0.tar.gz", hash = "sha256:bfc1ef1b93280aea1ddee53be7f74232aa28ac3d891244d41ee85200d24aa446", size = 2412897, upload-time = "2025-12-26T22:10:53.359Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/6f/bd32e5e8adc391063858da17271bb444e4b009842cffa593bca8b2b78af7/scapy-2.7.0-py3-none-any.whl", hash = "sha256:eb22786da92be6fd8e5c694ae5595e4f5b9ac1f4364c9c45986844f3e3063561", size = 2590982, upload-time = "2025-12-26T22:07:48.941Z" },
-]
+provides-extras = ["all", "dev", "reload", "vision", "web"]
 
 [[package]]
 name = "six"

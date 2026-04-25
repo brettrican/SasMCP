@@ -208,8 +208,9 @@ _DESTRUCTIVE_PATTERNS = [
     # Out-File -Force / -Overwrite replaces any existing file.
     (re.compile(r"\bout-file\b[^|;&\n]*\s-force\b"),                                                      "out-file -force"),
     (re.compile(r"\bout-file\b[^|;&\n]*\s-overwrite\b"),                                                  "out-file -overwrite"),
-    # New-Item -Force on an existing file replaces it.
-    (re.compile(r"\bnew-item\b[^|;&\n]*\s-force\b"),                                                      "new-item -force"),
+    # New-Item -Force on an existing FILE replaces it. Directory/symlink/junction
+    # creation is idempotent with -Force (no-op if target exists) and safe.
+    (re.compile(r"\bnew-item\b(?![^|;&\n]*-itemtype\s+(?:directory|symboliclink|junction))[^|;&\n]*\s-force\b"), "new-item -force"),
     # CMD copy/xcopy /y silently overwrite destination.
     (re.compile(r"(?:^|[;&|])\s*copy\b[^|;&\n]*\s/y\b"),                                                  "copy /y"),
     (re.compile(r"\bxcopy\b[^|;&\n]*\s/y\b"),                                                             "xcopy /y"),
@@ -218,7 +219,13 @@ _DESTRUCTIVE_PATTERNS = [
     (re.compile(r"\brobocopy\b[^|;&\n]*\s/purge\b"),                                                      "robocopy /purge"),
     # Truncate-by-redirect: a single `>` that is NOT part of `>>` (append),
     # `&>`/`2>` (stream redirect), etc., pointing at a filename.
-    (re.compile(r"(?<![>&0-9])>(?!>)\s*[^\s&|;<>]"),                                                      "truncate-by-redirect"),
+    # Exemption: redirects to scratch/temp locations are benign stdout capture.
+    # Matches `> "%TEMP%\...`, `> $env:TEMP\...`, `> /tmp/...`, `> %TMP%\...`.
+    (re.compile(
+        r"(?<![>&0-9])>(?!>)\s*"
+        r"(?!\"?%TEMP%|\"?%TMP%|\"?\$env:TEMP|\"?\$env:TMP|\"?/tmp/|\"?/var/tmp/)"
+        r"[^\s&|;<>]"
+    ), "truncate-by-redirect"),
     (re.compile(r"\bmove-item\b[^|;&\n]*\s+\$null\b"),                                                    "move-item to $null"),
     (re.compile(r"\bout-null\b[^|;&\n]*>\s*\$null"),                                                      "redirect to $null"),
 ]

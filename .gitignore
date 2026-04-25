@@ -33,3 +33,49 @@ demo*.png
 demo*.bat
 demo_frames/
 demo_output/
+
+# Additional ignores for Windows, Python, and build artifacts
+*.log
+logs/
+sassymcp-v*.zip
+*.spec
+*.bak
+*.tmp
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+ehthumbs.db
+NVIDIA Corporation/
+
+# Ignore all .dist-info and .egg-info folders
+*.dist-info/
+*.egg-info/
+
+# Ignore local dev/test output
+tests/_DELETE_/
+sassymcp/modules/_DELETE_/
+
+# Ignore PyInstaller output
+deploy/sassymcp.exe
+deploy/tools/
+deploy/*.exe
+/sassymcp.exe
+
+# Ignore extracted dist folders
+dist/Most recent extract/
+dist/SassyMCP-v*/
+
+# Local scratch / probe output
+/_*.err
+/_*.txt
+/_*.bat
+/_*.log
+/_backups/
+
+# Cloudflare Workers / Wrangler local state
+sassymcp-oauth/node_modules/
+sassymcp-oauth/.cache/
+sassymcp-oauth/.wrangler/
+sassymcp-oauth/.mf/
+**/node_modules/

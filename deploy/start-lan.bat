@@ -1,20 +1,20 @@
 @echo off
-REM ==============================================================
-REM  SassyMCP - HTTP Mode (localhost or LAN)
+REM ══════════════════════════════════════════════════════════════
+REM  SassyMCP — HTTP Mode (localhost or LAN)
 REM  For: Claude Desktop HTTP, Cursor, Windsurf, Grok Desktop
-REM ==============================================================
+REM ══════════════════════════════════════════════════════════════
 
 set SASSYMCP_LOAD_ALL=1
 
-echo ===========================================
-echo  SassyMCP - HTTP Mode
-echo ===========================================
+echo ═══════════════════════════════════════════
+echo  SassyMCP — HTTP Mode
+echo ═══════════════════════════════════════════
 echo.
 
-REM -- Bind Address --------------------------------------------
+REM ── Bind Address ────────────────────────────────────────────
 echo  Choose bind address:
-echo    1. 127.0.0.1 (localhost only - safest)
-echo    2. 0.0.0.0   (LAN accessible - requires auth token)
+echo    1. 127.0.0.1 (localhost only — safest)
+echo    2. 0.0.0.0   (LAN accessible — requires auth token)
 echo.
 set /p BIND_CHOICE="  Select [1]: "
 if "%BIND_CHOICE%"=="2" (
@@ -23,11 +23,11 @@ if "%BIND_CHOICE%"=="2" (
     set BIND_ADDR=127.0.0.1
 )
 
-REM -- Port ----------------------------------------------------
+REM ── Port ────────────────────────────────────────────────────
 set /p PORT="  Port [21001]: "
 if "%PORT%"=="" set PORT=21001
 
-REM -- Auth Token (required for LAN, optional for localhost) ---
+REM ── Auth Token (required for LAN, optional for localhost) ───
 if "%BIND_ADDR%"=="0.0.0.0" (
     echo.
     echo  [!] LAN mode requires an auth token for security.
@@ -55,7 +55,7 @@ if "%BIND_ADDR%"=="0.0.0.0" (
 
 echo.
 echo  Starting on %BIND_ADDR%:%PORT%...
-echo ===========================================
+echo ═══════════════════════════════════════════
 
 if exist "%~dp0dist\sassymcp.exe" (
     "%~dp0dist\sassymcp.exe" --http --host %BIND_ADDR% --port %PORT%
