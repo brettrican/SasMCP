@@ -194,8 +194,16 @@ class Updater:
         except (urllib.error.URLError, TimeoutError) as e:
             return {"error": f"Download failed: {e}", "url": url}
 
-        is_msi = asset_name.lower().endswith(".msi")
-        run_cmd = f'msiexec /i "{dest}"' if is_msi else f'"{dest}"'
+        name_lower = asset_name.lower()
+        if name_lower.endswith(".msi"):
+            # Legacy MSI assets — kept working for older releases (<= v1.3.0).
+            run_cmd = f'msiexec /i "{dest}"'
+        elif name_lower.endswith(".zip"):
+            # Portable bundle — extract over the existing install dir.
+            extract_dir = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "SassyMCP" / info["tag"]
+            run_cmd = f'Expand-Archive -Path "{dest}" -DestinationPath "{extract_dir}" -Force'
+        else:
+            run_cmd = f'"{dest}"'
         return {
             "tag": info["tag"],
             "asset": asset_name,

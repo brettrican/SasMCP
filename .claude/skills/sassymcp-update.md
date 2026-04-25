@@ -34,17 +34,19 @@ Trigger when the user asks anything like:
    - Show the user the `name`, `published_at`, and `body` so they know what's
      in the release before downloading 100+ MB.
 
-3. **Ask the user which asset to install**:
-   - MSI installer (recommended for Windows — bundled tools + launchers)
-   - Standalone exe (no tools bundled, ~35 MB)
-   - Portable bundle zip (exe + tools, ~123 MB)
+3. **Ask the user which asset they want**:
+   - Portable zip (`sassymcp-v*-portable.zip`, ~123 MB) — exe + tools + launchers.
+     Extract anywhere; delete the folder to remove. **Recommended.**
+   - Standalone exe (`sassymcp.exe`, ~35 MB) — no bundled tools.
    - Or skip — they read the changelog and don't want to upgrade right now.
 
 4. **Call `sassy_update_apply`** with the chosen `asset_name`.
    - Returns `downloaded_to` (a path under `%LOCALAPPDATA%\SassyMCP\updates\`)
-     and `next_step` (e.g. `Run: msiexec /i "C:\..\SassyMCP-v1.3.0.msi"`).
+     and `next_step` — for a portable zip this is an `Expand-Archive`
+     command targeting `%LOCALAPPDATA%\SassyMCP\<tag>\`; for the standalone
+     exe it's the path to the exe.
    - Echo the `next_step` to the user verbatim — **do not** auto-execute it.
-     The MSI needs UAC; this is an explicit user action by design.
+     Updates apply on next launch; this is an explicit user action by design.
 
 ## License-aware download
 
