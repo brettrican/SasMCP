@@ -15,6 +15,7 @@ import ipaddress
 import logging
 import os
 import re
+import socket
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
@@ -129,12 +130,31 @@ _PRIVATE_RANGES = [
 ]
 
 
+_URL_MAX_LEN = 2048
+
+
+def _is_private_ip(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    return any(addr in net for net in _PRIVATE_RANGES)
+
+
 def validate_url(url: str, allow_private: bool = False) -> tuple[bool, Optional[str]]:
     """Validate a URL for SSRF protection.
 
-    Blocks: private IPs, link-local, cloud metadata, file:// scheme.
-    Set allow_private=True for tools that intentionally target LAN (e.g., crosslink).
+    Blocks: private IPs (literal or via DNS resolution), link-local, cloud
+    metadata, non-http(s) schemes. Set allow_private=True for tools that
+    intentionally target LAN (e.g., crosslink).
+
+    DNS resolution: hostnames are resolved via getaddrinfo and EVERY returned
+    address is checked. This closes the trivial SSRF where evil.example.com
+    points an A-record at 10.0.0.1. Note this does NOT defeat live DNS-rebinding
+    attacks where the resolver returns a public IP at validation time and a
+    private IP when the request is actually issued — defeating that requires
+    pinning the resolved address through to the HTTP client. Callers that need
+    that guarantee must resolve once here and then connect to the resolved IP.
     """
+    if not isinstance(url, str) or len(url) > _URL_MAX_LEN:
+        return False, f"URL exceeds max length ({_URL_MAX_LEN})"
+
     try:
         parsed = urlparse(url)
     except Exception:
@@ -149,17 +169,39 @@ def validate_url(url: str, allow_private: bool = False) -> tuple[bool, Optional[
     if allow_private:
         return True, None
 
-    # Resolve hostname to check for private IPs
+    hostname = parsed.hostname.lower()
+
+    # Always block dangerous hostnames by name, even before DNS — defends
+    # against /etc/hosts overrides and resolver weirdness.
+    if hostname in ("localhost", "metadata.google.internal", "metadata.azure.com"):
+        return False, f"Blocked: dangerous hostname ({hostname})"
+
+    # Literal IP — check directly.
     try:
-        addr = ipaddress.ip_address(parsed.hostname)
-        for net in _PRIVATE_RANGES:
-            if addr in net:
-                return False, f"Blocked: URL resolves to private/internal address ({parsed.hostname})"
+        addr = ipaddress.ip_address(hostname)
+        if _is_private_ip(addr):
+            return False, f"Blocked: URL resolves to private/internal address ({hostname})"
+        return True, None
     except ValueError:
-        # Not an IP literal — hostname. Check common dangerous hostnames.
-        hostname = parsed.hostname.lower()
-        if hostname in ("localhost", "metadata.google.internal", "169.254.169.254"):
-            return False, f"Blocked: dangerous hostname ({hostname})"
+        pass
+
+    # Hostname — resolve and check every returned address.
+    try:
+        infos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror as e:
+        return False, f"Blocked: hostname resolution failed ({hostname}: {e})"
+
+    for family, _type, _proto, _canon, sockaddr in infos:
+        ip_str = sockaddr[0]
+        try:
+            addr = ipaddress.ip_address(ip_str)
+        except ValueError:
+            continue
+        if _is_private_ip(addr):
+            return False, (
+                f"Blocked: hostname '{hostname}' resolves to "
+                f"private/internal address ({ip_str})"
+            )
 
     return True, None
 

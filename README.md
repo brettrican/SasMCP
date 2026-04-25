@@ -191,16 +191,47 @@ For complex flows where the user needs to take over:
 
 ## Guided Setup
 
-On first launch, the AI guides you through configuration:
+On first launch (no `~/.sassymcp/persona.md`), the wizard tools are prominently available and the AI is given an onboarding playbook via the registered hook. The flow is conversational — the AI asks, you answer, it calls the tools.
 
-| Tool | Purpose |
-|------|---------|
-| `sassy_setup_wizard` | Create your persona profile (role, expertise, tech stack, preferences) |
-| `sassy_setup_github` | Opens browser to GitHub token page, validates token, saves to env |
-| `sassy_setup_ssh` | Collects SSH host/user/password, finds plink, tests connection |
-| `sassy_setup_check_tools` | Scans for nmap, Tesseract, ADB, scrcpy, plink, Chrome — reports availability with install URLs |
-| `sassy_setup_status` | Shows what's configured and what's missing |
-| `sassy_setup_generate_token` | Creates auth tokens for HTTP/tunnel mode |
+### Onboarding procedure (recommended order)
+
+Each step is independent and skippable. Just tell the AI "set up SassyMCP" or "let's get started" and it'll walk this:
+
+| # | Step | Tool | What happens |
+|---|------|------|--------------|
+| 0 | **License** | `sassy_setup_license action="status"` then `action="activate" key=...` | Reports current tier. If you have a Pro/Forensics key, activates it and unlocks the gated tool groups. |
+| 1 | **Persona** | `sassy_setup_wizard` | Asks the questionnaire below, generates `~/.sassymcp/persona.md`, hot-reloads the persona module. |
+| 2 | **GitHub** | `sassy_setup_github action="check"` → `action="open_browser"` → `action="save_token" token=...` | Validates an existing `GITHUB_TOKEN`, or opens [github.com/settings/tokens](https://github.com/settings/tokens?type=beta), walks you through scope selection, then saves and re-validates. |
+| 3 | **SSH / Linux** | `sassy_setup_ssh action="check"` → `action="save" host=... user=... password=...` → `action="test"` | Locates `plink`, stores creds in process env, runs an `echo` round-trip to verify. |
+| 4 | **Optional tools** | `sassy_setup_check_tools` | Scans for `nmap`, `tesseract`, `adb`, `scrcpy`, `plink`, Chrome; reports install URLs for what's missing. |
+| ✓ | **Status check** | `sassy_setup_status` | Shows what's configured, what's still missing, and the action_required hint. Run this any time. |
+| ⚙️ | **Auth tokens** | `sassy_setup_generate_token client_id="claude-desktop"` | Generates a 32-byte URL-safe token for HTTP/tunnel mode and writes `~/.sassymcp/tokens.json`. |
+
+Skip any step with `action="skip"` (where supported) — config records the skip so the AI doesn't re-prompt.
+
+### The persona questionnaire
+
+`sassy_setup_wizard` accepts these fields. All optional — defaults shown.
+
+| Field | Values / format | Default |
+|---|---|---|
+| `role` | `developer` \| `sysadmin` \| `security` \| `devops` \| `data` \| `designer` \| `manager` \| `other` | `developer` |
+| `expertise_level` | `junior` \| `mid` \| `senior` \| `principal` \| `staff` | `senior` |
+| `specializations` | Comma-separated areas — e.g. `"web security, cloud infra, mobile"` | empty |
+| `languages` | Comma-separated — e.g. `"Python, Rust, TypeScript, Go"` | empty |
+| `frameworks` | Comma-separated — e.g. `"React, FastAPI, Cloudflare Workers"` | empty |
+| `systems` | Newline-separated `hostname — OS — role` entries | empty |
+| `projects` | Newline-separated `name — status — description` entries | empty |
+| `communication_style` | `terse` (code only) \| `balanced` (brief explanations) \| `verbose` (detailed rationale) | `terse` |
+| `security_posture` | `standard` (OWASP) \| `hardened` (+ CSP/HSTS/rate-limit) \| `paranoid` (+ air-gap, cert pinning, zero trust) | `standard` |
+| `mcp_clients` | Which AI tools connect — e.g. `"Claude Desktop, Cursor, Grok Desktop"` | empty |
+| `notes` | Free-form text — anything else the AI should know about how you work | empty |
+
+Output goes to `~/.sassymcp/persona.md` (the persona module reads it on every session) and the run is recorded in `~/.sassymcp/config.json` (`setup_complete`, `setup_timestamp`, `setup_version`). Re-run `sassy_setup_wizard` any time to regenerate — the persona module hot-reloads with the new profile.
+
+### Triggering the flow from your client
+
+The onboarding hook fires on phrases like `"setup"`, `"first time"`, `"get started"`, `"onboard"`, `"new user"`, `"set up sassymcp"`. Anything close to those will pull the playbook into the AI's context. If you want to drive it manually, just call `sassy_setup_status` first to see where you are, then walk the table above.
 
 ## Smart Loading
 

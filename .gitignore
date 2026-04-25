@@ -87,3 +87,7 @@ sassymcp-oauth/.cache/
 sassymcp-oauth/.wrangler/
 sassymcp-oauth/.mf/
 **/node_modules/
+
+# Mercury audit bundles — these are full-source dumps sent to the audit API.
+# Keep the markdown reports under audits/, ignore the bundle text dumps.
+audits/*_bundle.txt
