@@ -237,12 +237,28 @@ SASSYMCP_GROUPS=core,github_quick,android,v020 uv run sassymcp
 
 ## Install
 
-### Standalone Executable (recommended)
+### Windows MSI (easiest)
+
+The signed MSI from the [latest release](https://github.com/sassyconsultingllc/SassyMCP/releases/latest) installs SassyMCP into `C:\Program Files\SassyMCP\` with the bundled tooling (`adb`, `nmap`, `plink`, `scrcpy`, `tesseract`, `cloudflared`) and the `start-local.bat` / `start-lan.bat` / `start-tunnel.bat` launchers. Double-click and follow the prompts — no Python, no PATH edits.
+
+After install, paste the Claude Desktop config snippet [below](#using-the-exe) and you're done.
+
+### One-line PowerShell (license-gated)
+
+```powershell
+$key = "SASSY-XXXX-XXXX-XXXX"   # from https://sassyconsultingllc.com/pricing.html
+$dst = "$env:LOCALAPPDATA\SassyMCP"
+New-Item -Force -ItemType Directory $dst | Out-Null
+Invoke-WebRequest "https://sassyconsultingllc.com/download/sassymcp/windows/sassymcp.exe?key=$key" -OutFile "$dst\sassymcp.exe"
+Write-Host "Installed: $dst\sassymcp.exe"
+```
+
+### Standalone Executable (license-gated)
 
 **[Get a license →](https://sassyconsultingllc.com/pricing.html)** — SassyMCP downloads are license-gated. After checkout you receive a `SASSY-...` key; paste it into the download URL:
 
 - `https://sassyconsultingllc.com/download/sassymcp/windows/sassymcp.exe?key=SASSY-...` (standalone exe, ~35 MB)
-- `https://sassyconsultingllc.com/download/sassymcp/windows/sassymcp-v1.1.3-bundle.zip?key=SASSY-...` (full bundle with `adb`, `nmap`, `plink`, `scrcpy`, `tesseract`, `cloudflared`, plus README and start-*.bat scripts, ~123 MB)
+- `https://sassyconsultingllc.com/download/sassymcp/windows/sassymcp-v1.2.0-bundle.zip?key=SASSY-...` (full bundle with `adb`, `nmap`, `plink`, `scrcpy`, `tesseract`, `cloudflared`, plus README and start-*.bat scripts, ~123 MB)
 
 No Python required.
 
@@ -257,6 +273,24 @@ uv sync
 uv pip install pytesseract playwright
 playwright install chromium
 ```
+
+### Cloudflare Tunnel (remote access in 60 seconds)
+
+Want to drive SassyMCP from a remote MCP client (Claude Web, another machine)? The bundle ships with a turnkey tunnel launcher.
+
+```powershell
+winget install Cloudflare.cloudflared          # one-time
+cd "C:\Program Files\SassyMCP"                 # or wherever you installed
+.\start-tunnel.bat                             # auto-generates auth token, prompts for tunnel name
+```
+
+`start-tunnel.bat` will:
+1. Verify `cloudflared` is on `PATH` (and link to `winget install Cloudflare.cloudflared` if missing).
+2. Auto-generate a 32-byte URL-safe `SASSYMCP_AUTH_TOKEN` (or accept yours via stdin) and print it once for you to copy into your client.
+3. Prompt for a tunnel name (default `sassymcp`) and start `cloudflared tunnel run`.
+4. Boot the HTTP bridge on `127.0.0.1:21001` so the tunnel has something to forward to.
+
+Clients then send `Authorization: Bearer <token>` against `https://<your-tunnel>.trycloudflare.com/mcp` (or your own custom hostname if you've configured DNS).
 
 ## Claude Desktop Config
 
