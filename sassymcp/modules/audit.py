@@ -87,6 +87,41 @@ def _rotate_jsonl_if_needed():
         pass
 
 
+def log_pattern_event(event: str, tool_name: str, pattern: str, command: str, extra: dict | None = None):
+    """Log a pattern-detection event (block or bypass) for forensic review.
+
+    event: 'pattern_block' (interceptor refused to run) or
+           'pattern_bypass' (allow_pattern opt-in let it through).
+    pattern: the matched pattern label, e.g. 'truncate-by-redirect'.
+
+    Both forms are written to audit.log/audit.jsonl with a stable
+    'pattern_event' field so users can grep for false-positive candidates
+    via sassy_audit_search('pattern_block') or the dedicated
+    sassy_audit_false_positives tool.
+    """
+    try:
+        _LOG_DIR.mkdir(parents=True, exist_ok=True)
+        _rotate_if_needed()
+        entry = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "timestamp": time.time(),
+            "event": event,
+            "pattern_event": True,
+            "tool": tool_name,
+            "pattern": pattern,
+            "command": command[:500],
+        }
+        if extra:
+            entry.update({k: (str(v)[:300] if not isinstance(v, (int, float, bool)) else v) for k, v in extra.items()})
+        with _LOG_FILE.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+        _rotate_jsonl_if_needed()
+        with _JSONL_FILE.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except OSError:
+        pass
+
+
 def log_intercept(tool_name: str, keyword: str, command: str, targets: list, results: list):
     """Log a delete-interception event to audit.log + audit.jsonl.
 
@@ -195,6 +230,52 @@ def register(server):
         matches = [line for line in lines if needle in line.lower()]
         recent = matches[-count:] if len(matches) > count else matches
         return "\n".join(recent) if recent else f"No entries matching '{keyword}'"
+
+    @server.tool()
+    async def sassy_audit_false_positives(count: int = 20, include_bypasses: bool = True) -> str:
+        """Show recent shell-interceptor pattern matches (blocks + bypasses).
+
+        Surfaces the noisy-pattern events you'd otherwise have to grep for.
+        Each row: timestamp | event | pattern | command (truncated).
+
+        Args:
+            count: max rows to return (newest last).
+            include_bypasses: if False, show only blocks (commands that
+                actually got refused). True also includes pattern_bypass
+                entries — useful for auditing what the allow_pattern flag
+                has been used to let through.
+        """
+        if not _JSONL_FILE.exists():
+            return "No audit entries yet"
+        try:
+            lines = _JSONL_FILE.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError as e:
+            return f"Error reading audit log: {e}"
+
+        wanted = {"pattern_block"}
+        if include_bypasses:
+            wanted.add("pattern_bypass")
+
+        rows = []
+        for line in lines:
+            try:
+                obj = json.loads(line)
+            except (ValueError, json.JSONDecodeError):
+                continue
+            if obj.get("event") in wanted:
+                rows.append(obj)
+
+        if not rows:
+            return "No pattern_block / pattern_bypass entries yet"
+
+        rows = rows[-count:]
+        out = []
+        for r in rows:
+            out.append(
+                f"{r.get('ts','?')} | {r.get('event','?'):<15} | "
+                f"{str(r.get('pattern','?')):<25} | {str(r.get('command',''))[:120]}"
+            )
+        return "\n".join(out)
 
     @server.tool()
     async def sassy_audit_clear(confirm: str = "") -> str:

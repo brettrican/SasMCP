@@ -181,9 +181,23 @@ def _normalize_for_powershell(command: str) -> str:
 
 def register(server):
     @server.tool()
-    async def sassy_shell(command: str, shell: str = "powershell", timeout_seconds: int = 30) -> str:
+    async def sassy_shell(
+        command: str,
+        shell: str = "powershell",
+        timeout_seconds: int = 30,
+        allow_pattern: str = "",
+    ) -> str:
         """Execute a shell command. shell: powershell, cmd, or wsl.
-        Automatically normalizes syntax (e.g. && to ; for PowerShell)."""
+        Automatically normalizes syntax (e.g. && to ; for PowerShell).
+
+        allow_pattern: opt-in escape hatch for power users. When set to a
+        specific pattern label (e.g. 'truncate-by-redirect') OR to '*',
+        a regex-pattern match with that label is allowed to execute
+        instead of being blocked. The bypass is recorded as a
+        'pattern_bypass' audit entry. Keyword matches (rm/del/remove-item)
+        are NEVER affected by this flag — only regex patterns can be
+        opted out, and only one pattern at a time.
+        """
         shell_map = {
             "powershell": ["powershell.exe", "-NoProfile", "-Command"],
             "cmd": ["cmd.exe", "/c"],
@@ -209,12 +223,30 @@ def register(server):
             if kw_root in _DELETE_KEYWORDS:
                 targets = _parse_delete_targets(command)
                 return await _safe_move_to_staging(targets, keyword, command)
-            return (
-                f"Command blocked (safety): matched destructive pattern "
-                f"'{keyword}'. No files were moved.\n"
-                f"If this was a false positive, rephrase the command or use "
-                f"sassy_safe_delete() for intentional deletions."
-            )
+
+            # Pattern match: log it for forensic review. If allow_pattern
+            # opts in to this specific label (or '*'), record a bypass and
+            # let the command run. Otherwise block and tell the user how
+            # to opt in if it's a false positive.
+            if allow_pattern and (allow_pattern == keyword or allow_pattern == "*"):
+                _audit.log_pattern_event(
+                    "pattern_bypass", "sassy_shell", keyword, command,
+                    {"allow_pattern": allow_pattern},
+                )
+                # fall through to execution
+            else:
+                _audit.log_pattern_event(
+                    "pattern_block", "sassy_shell", keyword, command,
+                )
+                return (
+                    f"Command blocked (safety): matched destructive pattern "
+                    f"'{keyword}'. No files were moved.\n"
+                    f"If this was a false positive, retry with "
+                    f"allow_pattern='{keyword}' (logged as pattern_bypass), "
+                    f"or use sassy_safe_delete() for intentional deletions.\n"
+                    f"Review recent false-positive candidates with "
+                    f"sassy_audit_false_positives()."
+                )
             
         # Clamp timeout
         timeout_seconds = min(max(timeout_seconds, 1), _MAX_TIMEOUT)

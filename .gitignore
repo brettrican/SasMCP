@@ -24,8 +24,11 @@ _DELETE_/
 # Wrangler cache
 .wrangler/
 
-# Local Claude Code session state
-.claude/
+# Local Claude Code session state — keep .claude/skills/ tracked (shipped),
+# only ignore the per-machine local state.
+.claude/settings.local.json
+.claude/sessions/
+.claude/cache/
 
 # Demo recording artifacts (one-off recording outputs, not source)
 demo*.gif

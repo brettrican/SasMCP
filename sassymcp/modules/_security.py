@@ -234,6 +234,31 @@ _DESTRUCTIVE_PATTERNS = [
 # delete keyword invisible to first-word matching.
 _PS_ASSIGNMENT_PREFIX = re.compile(r"^\$\w+\s*=\s*")
 
+# Match the contents of single/double/backtick-quoted runs that don't span
+# newlines. Used to neutralize destructive characters like `>` that live
+# inside string literals — those can never trigger a real shell redirect.
+_QUOTED_RUN = re.compile(r"'[^'\n]*'|\"[^\"\n]*\"|`[^`\n]*`")
+
+
+def _strip_quoted_strings(s: str) -> str:
+    """Replace quoted-string contents with neutral filler, preserving length.
+
+    Rationale: a literal `>` inside `"V:\\logs\\bridge.out.log"` cannot be a
+    shell redirect — it's data inside a parameter value. Running the
+    `truncate-by-redirect` regex against the raw command flags it as
+    destructive anyway. Pre-stripping the contents (but keeping the quote
+    characters and overall length so offsets stay sensible) lets pattern
+    matching see only the shell metacharacters that are actually live.
+
+    Quote characters themselves are kept so first-word/keyword matching is
+    still well-formed; only the contents are filled with `x` (a character
+    that won't match any destructive pattern).
+    """
+    def replacer(m: re.Match) -> str:
+        run = m.group(0)
+        return run[0] + ("x" * (len(run) - 2)) + run[-1]
+    return _QUOTED_RUN.sub(replacer, s)
+
 
 def _decode_powershell_base64(payload: str) -> Optional[str]:
     """Best-effort decode of a PowerShell -EncodedCommand argument.
@@ -268,8 +293,12 @@ def _scan_segment(seg_lower: str, seg_orig: str) -> tuple[bool, str]:
     stripped_orig = _PS_ASSIGNMENT_PREFIX.sub("", stripped_orig)
 
     # Destructive regex patterns — run first so they catch things keywords miss.
+    # Run patterns against a quoted-string-stripped copy so a literal `>`
+    # inside a parameter value (e.g. "-RedirectStandardOutput \"V:\\logs\\f.log\"")
+    # cannot impersonate a real shell redirect.
+    pattern_subject = _strip_quoted_strings(stripped_lower)
     for pat, label in _DESTRUCTIVE_PATTERNS:
-        if pat.search(stripped_lower):
+        if pat.search(pattern_subject):
             return True, label
 
     words_lower = stripped_lower.split()

@@ -445,6 +445,134 @@ async def test_adb():
 asyncio.run(test_adb())
 
 
+# ── v1.3.0: quoted-string pre-strip & allow_pattern ──────────────────
+print("\n[11] _strip_quoted_strings — quoted contents neutralized")
+from sassymcp.modules._security import _strip_quoted_strings
+
+strip_cases = [
+    # (raw, expected — chars inside quotes replaced with x, quote chars kept)
+    ('echo "hello > world"',       'echo "xxxxxxxxxxxxx"'),
+    ("echo 'a > b'",               "echo 'xxxxx'"),
+    ('plain > target',             'plain > target'),                # no quotes — untouched
+    ('one "ab" two "cd"',          'one "xx" two "xx"'),
+    ('a "with > inside" b',        'a "xxxxxxxxxxxxx" b'),
+    ("`backticks > here`",         "`xxxxxxxxxxxxxxxx`"),
+]
+for raw, expected in strip_cases:
+    got = _strip_quoted_strings(raw)
+    check(f"strip {raw!r} -> {expected!r}", got == expected, f"got={got!r}")
+
+
+print("\n[12] detect_delete_intent — quoted `>` no longer flags redirect")
+quoted_cases = [
+    # The classic v1.2.0 false positive: `>` lives inside a parameter value.
+    ('Start-Process -RedirectStandardOutput "V:\\logs\\bridge.out.log"', False),
+    # Even a literal `>` character inside a quoted string is data, not a redirect.
+    # Use a non-/tmp target so the temp-redirect exemption doesn't kick in.
+    ('echo "a > b" > C:\\Users\\me\\out.log', True),   # the SECOND `>` is real
+    ('echo "a > b"',                False),  # only the quoted `>` exists
+    ("echo 'a > b'",                False),
+    # Bare redirect must still trip.
+    ('command > target.txt',        True),
+    # Redirect inside backticks (PS subexpression syntax) still data.
+    ('Write-Host `> data`',         False),
+]
+for cmd, expected in quoted_cases:
+    got, kw = detect_delete_intent(cmd)
+    check(f"q-strip detect={expected} <- {cmd!r}", got == expected, f"got=({got},{kw!r})")
+
+
+print("\n[13] sassy_shell — allow_pattern opt-in bypass")
+# Reach into the registered tool and exercise it against a sandbox dir.
+from sassymcp.modules import shell as shell_mod
+_fake = _FakeServer()
+shell_mod.register(_fake)
+sassy_shell = _fake.tools["sassy_shell"]
+
+async def test_allow_pattern():
+    with tempfile.TemporaryDirectory(prefix="sassy_ap_") as td:
+        td_path = Path(td)
+        # Pattern-only command (no delete keyword): truncate-by-redirect.
+        # Without allow_pattern -> blocked.
+        target = (td_path / "out.log").as_posix()
+        cmd_redirect = f'echo hi > {target}'
+        r = await sassy_shell(cmd_redirect, "powershell", 10)
+        check("allow_pattern: redirect blocked by default",
+              "blocked" in r.lower() and "truncate-by-redirect" in r,
+              f"r={r[:200]}")
+        check("allow_pattern: file NOT created when blocked",
+              not Path(target).exists())
+
+        # With allow_pattern matching the label -> bypassed and runs.
+        r = await sassy_shell(cmd_redirect, "powershell", 10, allow_pattern="truncate-by-redirect")
+        check("allow_pattern: bypass executes the command",
+              "[exit:" in r,
+              f"r={r[:200]}")
+        check("allow_pattern: file WAS created via bypass",
+              Path(target).exists())
+
+        # Wrong allow_pattern label still blocks.
+        target2 = (td_path / "out2.log").as_posix()
+        cmd2 = f'echo hi > {target2}'
+        r = await sassy_shell(cmd2, "powershell", 10, allow_pattern="copy /y")
+        check("allow_pattern: wrong label still blocks",
+              "blocked" in r.lower(),
+              f"r={r[:200]}")
+        check("allow_pattern: wrong-label file NOT created",
+              not Path(target2).exists())
+
+        # Wildcard '*' bypasses any pattern.
+        target3 = (td_path / "out3.log").as_posix()
+        cmd3 = f'echo hi > {target3}'
+        r = await sassy_shell(cmd3, "powershell", 10, allow_pattern="*")
+        check("allow_pattern: wildcard executes",
+              "[exit:" in r,
+              f"r={r[:200]}")
+
+        # KEYWORD matches must NEVER be bypassable via allow_pattern —
+        # rm/del/ri only ever go through the staging mover.
+        f = td_path / "stillsafe.txt"
+        f.write_text("x")
+        r = await sassy_shell(f"del {f}", "powershell", 10, allow_pattern="*")
+        check("allow_pattern: keyword (del) NOT bypassable with '*'",
+              "Delete command blocked" in r,
+              f"r={r[:200]}")
+        # Keyword path stages the target, doesn't run del.
+        check("allow_pattern: keyword target staged, not deleted",
+              not f.exists() and (td_path / "_DELETE_" / "stillsafe.txt").exists())
+
+asyncio.run(test_allow_pattern())
+
+
+print("\n[14] sassy_audit_false_positives — surfaces pattern events")
+import json as _json
+from sassymcp.modules import audit as audit_mod
+_fake = _FakeServer()
+audit_mod.register(_fake)
+sassy_audit_false_positives = _fake.tools["sassy_audit_false_positives"]
+
+async def test_audit_fp():
+    # Run two pattern-only commands so audit.jsonl picks up entries.
+    with tempfile.TemporaryDirectory(prefix="sassy_fp_") as td:
+        target = (Path(td) / "x.log").as_posix()
+        await sassy_shell(f'echo a > {target}', "powershell", 10)            # block
+        await sassy_shell(f'echo b > {target}', "powershell", 10,
+                          allow_pattern="truncate-by-redirect")              # bypass
+
+    out = await sassy_audit_false_positives(count=10, include_bypasses=True)
+    check("audit_false_positives: shows pattern_block",
+          "pattern_block" in out, f"out={out[:300]}")
+    check("audit_false_positives: shows pattern_bypass",
+          "pattern_bypass" in out, f"out={out[:300]}")
+
+    out = await sassy_audit_false_positives(count=10, include_bypasses=False)
+    check("audit_false_positives: hides bypasses when asked",
+          "pattern_bypass" not in out and "pattern_block" in out,
+          f"out={out[:300]}")
+
+asyncio.run(test_audit_fp())
+
+
 print("\n==================")
 print(f"{PASS} passed, {FAIL} failed")
 print("==================")
